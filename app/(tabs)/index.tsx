@@ -1,20 +1,17 @@
 import { Post } from "@/components/post";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 
-export default function Index() {
+const Feed = () => {
   return (
-    <View
-      style={{
-        display: "flex",
-        flexDirection: "column",
+    <ScrollView
+      contentContainerStyle={{
         paddingHorizontal: 8,
         alignItems: "center",
       }}
     >
       <View
         style={{
-          display: "flex",
-          flexDirection: "column",
+          paddingVertical: 8,
           gap: 8,
           width: "100%",
           maxWidth: 600,
@@ -23,6 +20,8 @@ export default function Index() {
         <Post />
         <Post />
       </View>
-    </View>
+    </ScrollView>
   );
-}
+};
+
+export default Feed;
