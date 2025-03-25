@@ -1,9 +1,10 @@
-import { Button, Text, TextInput, View } from "react-native";
+import { PageWrapper } from "@/components/page-wrapper";
 import { Picker } from "@react-native-picker/picker";
-import { useState } from "react";
-import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
-import { Link, Stack } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { Link } from "expo-router";
+import { useState } from "react";
+import { Button, TextInput, View } from "react-native";
 
 const CreatePost = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -22,17 +23,14 @@ const CreatePost = () => {
   };
 
   return (
-    <View style={{ alignItems: "center", paddingHorizontal: 8 }}>
-      <View
-        style={{ maxWidth: 600, width: "100%", gap: 8, paddingVertical: 8 }}
-      >
+    <PageWrapper>
+      <View style={{ gap: 8 }}>
         <Picker>
           <Picker.Item label="Make music" value="make-music" />
           <Picker.Item label="Go to gym" value="go-to-gym" />
         </Picker>
-
+        <Link href="/(tabs)/(create)/intention">+ Create intention</Link>
         <Button title="upload image" onPress={pickImage} />
-        <Link href="/(tabs)/(create)/intention">Create intention</Link>
         {image && (
           <Image source={image} style={{ width: "100%", aspectRatio: 1 }} />
         )}
@@ -43,7 +41,7 @@ const CreatePost = () => {
         />
         <Button title="post" />
       </View>
-    </View>
+    </PageWrapper>
   );
 };
 

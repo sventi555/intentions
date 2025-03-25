@@ -1,26 +1,19 @@
+import { PageWrapper } from "@/components/page-wrapper";
 import { Post } from "@/components/post";
 import { ScrollView, View } from "react-native";
 
 const Feed = () => {
   return (
-    <ScrollView
-      contentContainerStyle={{
-        paddingHorizontal: 8,
-        alignItems: "center",
-      }}
-    >
-      <View
-        style={{
-          paddingVertical: 8,
-          gap: 8,
-          width: "100%",
-          maxWidth: 600,
-        }}
-      >
-        <Post />
-        <Post />
-      </View>
-    </ScrollView>
+    <View style={{ flex: 1, position: "relative" }}>
+      <ScrollView>
+        <PageWrapper>
+          <View style={{ gap: 8 }}>
+            <Post />
+            <Post />
+          </View>
+        </PageWrapper>
+      </ScrollView>
+    </View>
   );
 };
 
