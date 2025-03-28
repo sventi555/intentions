@@ -1,13 +1,25 @@
 import { PageWrapper } from "@/components/page-wrapper";
 import { Post } from "@/components/post";
-import { auth } from "@/firebaseConfig";
+import { auth, db } from "@/firebaseConfig";
 import { useUser } from "@/hooks/user";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
 import { signOut } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
 import { ScrollView, Text, View } from "react-native";
 
 const Feed = () => {
   const user = useUser();
+
+  const { data } = useQuery({
+    queryKey: ["docs"],
+    queryFn: async () => {
+      const query = await getDocs(collection(db, "test"));
+      return query.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    },
+  });
+
+  console.log("data", data);
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
