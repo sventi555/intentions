@@ -1,0 +1,99 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  	function hasFields(required, optional) {
+      let allAllowedFields = required.concat(optional);
+      return request.resource.data.keys().hasAll(required) &&
+        request.resource.data.keys().hasOnly(allAllowedFields);
+    }
+    
+    function unchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+    
+    function existsIn(collection, id) {
+    	return exists(/databases/$(database)/documents/$(collection)/$(id));
+    }
+    
+    function existsInAfter(collection ,id) {
+    	return existsAfter(/databases/$(database)/documents/$(collection)/$(id));
+    }
+    
+    function getIn(collection, id) {
+    	return get(/databases/$(database)/documents/$(collection)/$(id));
+    }
+    
+    function getInAfter(collection, id) {
+    	return getAfter(/databases/$(database)/documents/$(collection)/$(id));
+    }
+    
+    match /{document=**} {
+      allow read: if false;
+      allow write: if false;
+    }
+    
+    match /index/users/username/{username} {
+    	function userExists() {
+      	return getInAfter(/users, request.resource.data.userId).data.username == username;
+      }
+      
+    	allow read: if true;
+      allow create: if (hasFields(['userId'], []) &&
+      					 				userExists());
+    }
+    
+    match /users/{id} {
+      function hasUserFields() {
+        return hasFields(['username', 'private'], ['imageUrl'])
+      }
+      
+      function usernameIndexExists() {
+      	return existsInAfter(/index/users/username, request.resource.data.username);
+      }
+    
+    	allow read: if true;
+      allow create: if (request.auth.uid == id &&
+      					 				hasUserFields() &&
+                 				usernameIndexExists());
+      allow update: if (request.auth.uid == id &&
+      									hasUserFields() &&
+      									unchanged(['username']));
+    }
+        
+    match /follows/{fromUserId}/{toUserId} {
+    	function hasFollowFields() {
+      	return hasFields(['status'], []);
+      }
+      
+      function isPublic() {
+      	return getIn(/users, fromUserId).data.private == false || getIn(/users, toUserId).data.private == false;
+      }
+      
+      function includesMe() {
+      	return fromUserId == request.auth.uid || toUserId == request.auth.uid;
+      }
+      
+      function belongsToFriend() {
+      	return (existsIn(/follows, /$(request.auth.uid)/$(toUserId)) && getIn(/follows, /$(request.auth.uid)/$(toUserId)).data.status == 'accepted') ||
+        			 (existsIn(/follows, /$(request.auth.uid)/$(fromUserId)) && getIn(/follows, /$(request.auth.uid)/$(fromUserId)).data.status == 'accepted');
+      }
+      
+      allow read: if (includesMe() || (resource.data.status == 'accepted' && (isPublic() || belongsToFriend())));
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  }
+}

@@ -1,9 +1,9 @@
 import { PageWrapper } from "@/components/page-wrapper";
+import { auth } from "@/config/firebase";
 import { Link, useRouter } from "expo-router";
-import { Button, Text, TextInput } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
-import { auth } from "@/firebaseConfig";
+import { Button, Text, TextInput } from "react-native";
 
 const SignIn = () => {
   const router = useRouter();
