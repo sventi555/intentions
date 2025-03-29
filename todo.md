@@ -1,0 +1,2 @@
+- set up firestore emulator
+- create tests for firestore rules
