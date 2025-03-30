@@ -1,0 +1,13 @@
+{
+  "name": "intentions-firebase",
+  "version": "1.0.0",
+  "scripts": {
+    "emulator": "firebase emulators:start --only firestore",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.5.0",
+    "vitest": "^3.0.9"
+  }
+}
