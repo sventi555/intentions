@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "db-emulator": "cd ./firebase && firebase emulators:start --only firestore",
+    "test-db-rules": "vitest run firebase/firestore-rules.test.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
@@ -43,10 +45,13 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@firebase/rules-unit-testing": "^4.0.1",
     "@types/react": "~18.3.12",
     "@types/react-test-renderer": "^18.3.0",
+    "firebase": "^11.5.0",
     "react-test-renderer": "18.3.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^3.0.9"
   },
   "private": true,
   "packageManager": "pnpm@9.14.2+sha512.6e2baf77d06b9362294152c851c4f278ede37ab1eba3a55fda317a4a17b209f4dbb973fb250a77abc463a341fcb1f17f17cfa24091c4eb319cda0d9b84278387"
