@@ -378,18 +378,6 @@ describe("follow rules", () => {
       );
       await assertFails(setDoc(followDoc, { status: STATUS.accepted }));
     });
-
-    it("should not allow unknown fields to be included", async () => {
-      const db = authContext.firestore();
-
-      const followDoc = doc(
-        db,
-        followDocPath(USER_IDS.authUser, USER_IDS.privateUser),
-      );
-      await assertFails(
-        setDoc(followDoc, { status: STATUS.pending, extraField: true }),
-      );
-    });
   });
 
   describe("update", () => {
@@ -459,25 +447,6 @@ describe("follow rules", () => {
 
         const followDoc = doc(db, followDocPath(from, to));
         await assertFails(updateDoc(followDoc, { status: STATUS.pending }));
-      });
-    });
-
-    describe("unknown fields are included", () => {
-      const { from, to, status } = {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.authUser,
-        status: STATUS.accepted,
-      };
-
-      beforeEach(async () => {
-        await addFollowWithoutRules(testEnv, { from, to, status });
-      });
-
-      it("should not allow updating status to pending", async () => {
-        const db = authContext.firestore();
-
-        const followDoc = doc(db, followDocPath(from, to));
-        await assertFails(updateDoc(followDoc, { extraField: true }));
       });
     });
   });

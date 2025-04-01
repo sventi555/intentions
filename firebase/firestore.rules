@@ -143,9 +143,47 @@ service cloud.firestore {
       );
     }
 
+    match /intentions/{id} {
+      function hasIntentionFields() {
+        return hasFields(['userId', 'name'], []);
+      }
 
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.userId;
+      }
 
+      function followsOwner() {
+        return request.auth != null && (
+          (
+            existsIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)) &&
+            getIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)).data.status == 'accepted'
+          ) ||
+          (
+            existsIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)) &&
+            getIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)).data.status == 'accepted'
+          )
+        );
+      }
 
+      function ownerIsPublic() {
+        return getIn(/users, resource.data.userId).data.private == false;
+      }
+
+      allow read: if (isOwner() || ownerIsPublic() || followsOwner());
+
+      allow create: if (
+        request.auth != null &&
+        request.auth.uid == request.resource.data.userId &&
+        hasIntentionFields()
+      );
+
+      allow update: if (
+        request.auth != null &&
+        request.auth.uid == request.resource.data.userId &&
+        hasIntentionFields() &&
+        unchanged(['userId'])
+      );
+    }
 
 
 

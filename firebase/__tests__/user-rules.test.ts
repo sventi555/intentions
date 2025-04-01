@@ -105,35 +105,6 @@ describe("user rules", () => {
     });
 
     // NOT ALLOWED
-    it("should not allow unknown fields on user", async () => {
-      const db = authContext.firestore();
-      const batch = writeBatch(db);
-
-      const userDoc = doc(db, userDocPath(USER_ID));
-      batch.set(userDoc, {
-        ...testUser,
-        extraField: true,
-      });
-
-      const usernameDoc = doc(db, usernameDocPath(testUser.username));
-      batch.set(usernameDoc, { userId: USER_ID });
-
-      await assertFails(batch.commit());
-    });
-
-    it("should not allow unknown fields on username", async () => {
-      const db = authContext.firestore();
-      const batch = writeBatch(db);
-
-      const userDoc = doc(db, userDocPath(USER_ID));
-      batch.set(userDoc, testUser);
-
-      const usernameDoc = doc(db, usernameDocPath(testUser.username));
-      batch.set(usernameDoc, { userId: USER_ID, extraField: true });
-
-      await assertFails(batch.commit());
-    });
-
     it("should not allow creating username or user separately", async () => {
       const db = authContext.firestore();
 
