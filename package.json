@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "db-emulator": "cd ./firebase && firebase emulators:start --only firestore",
-    "test-db-rules": "vitest run firebase/firestore-rules.test.ts"
+    "test-db": "vitest --no-file-parallelism firebase/__tests__"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",

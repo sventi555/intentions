@@ -2,99 +2,159 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  	function hasFields(required, optional) {
+    function hasFields(required, optional) {
       let allAllowedFields = required.concat(optional);
+
       return request.resource.data.keys().hasAll(required) &&
-        request.resource.data.keys().hasOnly(allAllowedFields);
+      request.resource.data.keys().hasOnly(allAllowedFields);
     }
-    
+
     function unchanged(fields) {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
-    
+
     function existsIn(collection, id) {
-    	return exists(/databases/$(database)/documents/$(collection)/$(id));
+      return exists(/databases/$(database)/documents/$(collection)/$(id));
     }
-    
+
     function existsInAfter(collection ,id) {
-    	return existsAfter(/databases/$(database)/documents/$(collection)/$(id));
+      return existsAfter(/databases/$(database)/documents/$(collection)/$(id));
     }
-    
+
     function getIn(collection, id) {
-    	return get(/databases/$(database)/documents/$(collection)/$(id));
+      return get(/databases/$(database)/documents/$(collection)/$(id));
     }
-    
+
     function getInAfter(collection, id) {
-    	return getAfter(/databases/$(database)/documents/$(collection)/$(id));
+      return getAfter(/databases/$(database)/documents/$(collection)/$(id));
     }
-    
+
     match /{document=**} {
       allow read: if false;
       allow write: if false;
     }
-    
+
     match /index/users/username/{username} {
-    	function userExists() {
-      	return getInAfter(/users, request.resource.data.userId).data.username == username;
+      function userExists() {
+        return (
+          existsInAfter(/users, request.resource.data.userId) &&
+          getInAfter(/users, request.resource.data.userId).data.username == username
+        );
       }
-      
-    	allow read: if true;
-      allow create: if (request.auth.uid == request.resource.data.userId &&
-                        hasFields(['userId'], []) &&
-      					 				userExists());
+
+      allow read: if true;
+
+      allow create: if (
+        request.auth != null &&
+        request.auth.uid == request.resource.data.userId &&
+        hasFields(['userId'], []) &&
+        userExists()
+      );
     }
-    
+
     match /users/{id} {
       function hasUserFields() {
         return hasFields(['username', 'private'], ['imageUrl'])
       }
-      
+
       function usernameIndexExists() {
-      	return existsInAfter(/index/users/username, request.resource.data.username);
+        return existsInAfter(/index/users/username, request.resource.data.username);
       }
-    
-    	allow read: if true;
-      allow create: if (request.auth.uid == id &&
-      					 				hasUserFields() &&
-                 				usernameIndexExists());
-      allow update: if (request.auth.uid == id &&
-      									hasUserFields() &&
-      									unchanged(['username']));
+
+      allow read: if true;
+
+      allow create: if (
+        request.auth != null &&
+        request.auth.uid == id &&
+        hasUserFields() &&
+        usernameIndexExists()
+      );
+
+      allow update: if (
+        request.auth != null &&
+        request.auth.uid == id &&
+        hasUserFields() &&
+        unchanged(['username'])
+      );
     }
-        
-    match /follows/{fromUserId}/{toUserId} {
-    	function hasFollowFields() {
-      	return hasFields(['status'], []);
+
+    match /follows/{fromUserId}/to/{toUserId} {
+      function hasFollowFields() {
+        return hasFields(['status'], []);
       }
-      
+
       function isPublic() {
-      	return getIn(/users, fromUserId).data.private == false || getIn(/users, toUserId).data.private == false;
+        return (
+          getIn(/users, fromUserId).data.private == false ||
+          getIn(/users, toUserId).data.private == false
+        );
       }
-      
+
       function includesMe() {
-      	return fromUserId == request.auth.uid || toUserId == request.auth.uid;
+        return request.auth != null && (fromUserId == request.auth.uid || toUserId == request.auth.uid);
       }
-      
+
       function belongsToFriend() {
-      	return (existsIn(/follows, /$(request.auth.uid)/$(toUserId)) && getIn(/follows, /$(request.auth.uid)/$(toUserId)).data.status == 'accepted') ||
-        			 (existsIn(/follows, /$(request.auth.uid)/$(fromUserId)) && getIn(/follows, /$(request.auth.uid)/$(fromUserId)).data.status == 'accepted');
+       return request.auth != null && (
+         (
+           existsIn(/follows, /$(request.auth.uid)/to/$(toUserId)) &&
+           getIn(/follows, /$(request.auth.uid)/to/$(toUserId)).data.status == 'accepted'
+         ) ||
+         (
+           existsIn(/follows, /$(request.auth.uid)/to/$(fromUserId)) &&
+           getIn(/follows, /$(request.auth.uid)/to/$(fromUserId)).data.status == 'accepted'
+         ) ||
+         (
+           existsIn(/follows, /$(fromUserId)/to/$(request.auth.uid)) &&
+           getIn(/follows, /$(fromUserId)/to/$(request.auth.uid)).data.status == 'accepted'
+         ) ||
+         (
+           existsIn(/follows, /$(toUserId)/to/$(request.auth.uid)) &&
+           getIn(/follows, /$(toUserId)/to/$(request.auth.uid)).data.status == 'accepted'
+         )
+       );
       }
-      
-      allow read: if (includesMe() || (resource.data.status == 'accepted' && (isPublic() || belongsToFriend())));
+
+      allow read: if (
+        includesMe() ||
+        (
+          resource.data.status == 'accepted' &&
+          (isPublic() || belongsToFriend())
+        )
+      );
+
+      allow create: if (
+        request.auth != null && request.auth.uid == fromUserId && hasFollowFields() && (
+          (getIn(/users, toUserId).data.private == true && request.resource.data.status == 'pending') ||
+          (getIn(/users, toUserId).data.private == false && request.resource.data.status == 'accepted')
+        ) &&
+        !existsIn(/follows, /$(toUserId)/to/$(fromUserId))
+      );
+
+      allow update: if (
+        request.auth != null &&
+        request.auth.uid == toUserId &&
+        hasFollowFields() &&
+        request.resource.data.status == 'accepted'
+      );
+
+      allow delete: if (
+        request.auth != null && (request.auth.uid == toUserId || request.auth.uid == fromUserId)
+      );
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
 }
