@@ -42,17 +42,14 @@ const intentionDocPath = (id: string) => `intentions/${id}`;
 
 const addIntentionWithoutRules = async (
   testEnv: RulesTestEnvironment,
-  { userId, name }: { userId: string; name: string },
+  intention: { userId: string; name: string },
 ) => {
   let intentionId: string = "";
 
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
 
-    const intentionDoc = await addDoc(collection(db, "intentions"), {
-      userId,
-      name,
-    });
+    const intentionDoc = await addDoc(collection(db, "intentions"), intention);
     intentionId = intentionDoc.id;
   });
 
@@ -280,7 +277,7 @@ describe("intention rules", () => {
   });
 
   describe("delete", () => {
-    // ALLOWED
+    // NOT ALLOWED
     describe("requester owns intention", () => {
       let intentionId: string;
 
@@ -291,10 +288,14 @@ describe("intention rules", () => {
         });
       });
 
-      it("should allow deleting", () => {});
+      it("should not allow deleting (for now)", async () => {
+        const db = authContext.firestore();
+
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(deleteDoc(intentionDoc));
+      });
     });
 
-    // NOT ALLOWED
     describe("requester does not own intention", () => {
       let intentionId: string;
 
