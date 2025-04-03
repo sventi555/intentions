@@ -221,7 +221,7 @@ describe("intention rules", () => {
   });
 
   describe("update", () => {
-    // ALLOWED
+    // NOT ALLOWED
     describe("requester owns intention", () => {
       let intentionId: string;
 
@@ -232,14 +232,13 @@ describe("intention rules", () => {
         });
       });
 
-      it("should allow updating name", async () => {
+      it("should not allow updating name", async () => {
         const db = authContext.firestore();
 
         const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertSucceeds(updateDoc(intentionDoc, { name: "new name" }));
+        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
       });
 
-      // NOT ALLOWED
       it("should not allow updating userId", async () => {
         const db = authContext.firestore();
 

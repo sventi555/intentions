@@ -165,6 +165,10 @@ describe("user rules", () => {
       });
     });
 
+    // TODO: consider what happens when updating privaty to public.
+    //       do we need a different model for follow requests, or should we just check
+    //       that all pending requests are accepted as part of this db query?
+
     // ALLOWED
     it("should allow updating all fields other than username", async () => {
       const db = authContext.firestore();
@@ -195,7 +199,7 @@ describe("user rules", () => {
   });
 
   describe("delete", () => {
-    it("should not allow deleting (for now)", async () => {
+    it("should not allow deleting", async () => {
       const db = authContext.firestore();
 
       const userDoc = doc(db, userDocPath(USER_ID));

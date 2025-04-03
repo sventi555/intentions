@@ -13,6 +13,10 @@ service cloud.firestore {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
 
+    function changed(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
     function existsIn(collection, id) {
       return exists(/databases/$(database)/documents/$(collection)/$(id));
     }
@@ -176,13 +180,6 @@ service cloud.firestore {
         request.auth.uid == request.resource.data.userId &&
         hasIntentionFields()
       );
-
-      allow update: if (
-        request.auth != null &&
-        request.auth.uid == request.resource.data.userId &&
-        hasIntentionFields() &&
-        unchanged(['userId'])
-      );
     }
 
     match /posts/{id} {
@@ -211,7 +208,25 @@ service cloud.firestore {
         return getIn(/users, resource.data.userId).data.private == false;
       }
 
+      function hasDescOrImg() {
+        return (
+          (request.resource.data.description != null && request.resource.data.description != '') ||
+          (request.resource.data.imageUrl != null)
+        );
+      }
+
       allow read: if (isOwner() || ownerIsPublic() || followsOwner());
+
+      allow create: if (
+        request.auth != null &&
+        request.auth.uid == request.resource.data.userId &&
+        hasPostFields() &&
+        hasDescOrImg()
+      );
+
+      allow update: if (isOwner() && changed(['description']));
+
+      allow delete: if isOwner();
     }
   }
 
