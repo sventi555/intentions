@@ -192,7 +192,7 @@ describe("follow rules", () => {
         status: STATUS.accepted,
       },
     ])(
-      "includes a friend and is accepted: follow %o",
+      "includes someone I'm following and is accepted: follow %o",
       ({ from, to, status }) => {
         beforeEach(async ({}) => {
           await addFollowWithoutRules(testEnv, { from, to, status });
@@ -212,6 +212,7 @@ describe("follow rules", () => {
       },
     );
 
+    // NOT ALLOWED
     describe.each([
       {
         from: USER_IDS.privateUser,
@@ -224,7 +225,7 @@ describe("follow rules", () => {
         status: STATUS.accepted,
       },
     ])(
-      "includes a friend (that followed me) and is accepted: follow %o",
+      "includes someone that follows me, but I don't follow them, and is accepted: follow %o",
       ({ from, to, status }) => {
         beforeEach(async ({}) => {
           await addFollowWithoutRules(testEnv, { from, to, status });
@@ -235,16 +236,15 @@ describe("follow rules", () => {
           });
         });
 
-        it("should allow reading", async () => {
+        it("should not allow reading", async () => {
           const db = authContext.firestore();
 
           const followDoc = doc(db, followDocPath(from, to));
-          await assertSucceeds(getDoc(followDoc));
+          await assertFails(getDoc(followDoc));
         });
       },
     );
 
-    // NOT ALLOWED
     describe.each([
       {
         from: USER_IDS.publicUser,
@@ -314,6 +314,33 @@ describe("follow rules", () => {
       await assertSucceeds(setDoc(followDoc, { status: STATUS.pending }));
     });
 
+    describe.each([
+      {
+        from: USER_IDS.publicUser,
+        to: USER_IDS.authUser,
+        status: STATUS.accepted,
+      },
+      {
+        from: USER_IDS.privateUser,
+        to: USER_IDS.authUser,
+        status: STATUS.pending,
+      },
+    ])(
+      "requesting to follow someone who has requested to follow me: %o",
+      ({ from, to, status }) => {
+        beforeEach(async () => {
+          await addFollowWithoutRules(testEnv, { from, to, status });
+        });
+
+        it("should allow creating", async () => {
+          const db = authContext.firestore();
+
+          const followDoc = doc(db, followDocPath(to, from));
+          await assertSucceeds(setDoc(followDoc, { status }));
+        });
+      },
+    );
+
     // NOT ALLOWED
     it("should not allow creating if user is not signed in", async () => {
       const db = unauthContext.firestore();
@@ -333,30 +360,6 @@ describe("follow rules", () => {
         followDocPath(USER_IDS.publicUser, USER_IDS.otherPublicUser),
       );
       await assertFails(setDoc(followDoc, { status: STATUS.accepted }));
-    });
-
-    describe.each([
-      {
-        from: USER_IDS.publicUser,
-        to: USER_IDS.authUser,
-        status: STATUS.accepted,
-      },
-      {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.authUser,
-        status: STATUS.pending,
-      },
-    ])("equivalent follow already exists: %o", ({ from, to, status }) => {
-      beforeEach(async () => {
-        await addFollowWithoutRules(testEnv, { from, to, status });
-      });
-
-      it("should not allow creating", async () => {
-        const db = authContext.firestore();
-
-        const followDoc = doc(db, followDocPath(to, from));
-        await assertFails(setDoc(followDoc, { status }));
-      });
     });
 
     it("should not allow creating with pending for public user", async () => {

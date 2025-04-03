@@ -181,6 +181,33 @@ describe("intention rules", () => {
         await assertFails(getDoc(intentionDoc));
       });
     });
+
+    describe("private owner follows me, but I don't follow them", () => {
+      let intentionId: string;
+
+      beforeEach(async () => {
+        intentionId = await addIntentionWithoutRules(testEnv, {
+          userId: USER_IDS.privateUser,
+          name: "cook grub",
+        });
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+          const db = context.firestore();
+
+          const followDoc = doc(
+            db,
+            followDocPath(USER_IDS.privateUser, USER_IDS.authUser),
+          );
+          await setDoc(followDoc, { status: STATUS.accepted });
+        });
+      });
+
+      it("should not allow reading intention", async () => {
+        const db = authContext.firestore();
+
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(getDoc(intentionDoc));
+      });
+    });
   });
 
   describe("create", () => {

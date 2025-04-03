@@ -2,18 +2,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function hasFields(required, optional) {
+    function willHaveFields(required, optional) {
       let allAllowedFields = required.concat(optional);
 
       return request.resource.data.keys().hasAll(required) &&
       request.resource.data.keys().hasOnly(allAllowedFields);
     }
 
-    function unchanged(fields) {
+    function willBeUnchanged(fields) {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
 
-    function changed(fields) {
+    function willBeChanged(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
@@ -33,13 +33,20 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/$(collection)/$(id));
     }
 
+    function isFollowing(user1Id, user2Id) {
+      return (
+        existsIn(/follows, /$(user1Id)/to/$(user2Id)) &&
+        getIn(/follows, /$(user1Id)/to/$(user2Id)).data.status == 'accepted'
+      );
+    }
+
     match /{document=**} {
       allow read: if false;
       allow write: if false;
     }
 
     match /index/users/username/{username} {
-      function userExists() {
+      function userExistsAfter() {
         return (
           existsInAfter(/users, request.resource.data.userId) &&
           getInAfter(/users, request.resource.data.userId).data.username == username
@@ -51,17 +58,17 @@ service cloud.firestore {
       allow create: if (
         request.auth != null &&
         request.auth.uid == request.resource.data.userId &&
-        hasFields(['userId'], []) &&
-        userExists()
+        willHaveFields(['userId'], []) &&
+        userExistsAfter()
       );
     }
 
     match /users/{id} {
-      function hasUserFields() {
-        return hasFields(['username', 'private'], ['imageUrl'])
+      function willHaveUserFields() {
+        return willHaveFields(['username', 'private'], ['imageUrl']);
       }
 
-      function usernameIndexExists() {
+      function usernameExistsAfter() {
         return existsInAfter(/index/users/username, request.resource.data.username);
       }
 
@@ -70,21 +77,21 @@ service cloud.firestore {
       allow create: if (
         request.auth != null &&
         request.auth.uid == id &&
-        hasUserFields() &&
-        usernameIndexExists()
+        willHaveUserFields() &&
+        usernameExistsAfter()
       );
 
       allow update: if (
         request.auth != null &&
         request.auth.uid == id &&
-        hasUserFields() &&
-        unchanged(['username'])
+        willHaveUserFields() &&
+        willBeUnchanged(['username'])
       );
     }
 
     match /follows/{fromUserId}/to/{toUserId} {
-      function hasFollowFields() {
-        return hasFields(['status'], []);
+      function willHaveFollowFields() {
+        return willHaveFields(['status'], []);
       }
 
       function isPublic() {
@@ -98,47 +105,31 @@ service cloud.firestore {
         return request.auth != null && (fromUserId == request.auth.uid || toUserId == request.auth.uid);
       }
 
-      function belongsToFriend() {
-       return request.auth != null && (
-         (
-           existsIn(/follows, /$(request.auth.uid)/to/$(toUserId)) &&
-           getIn(/follows, /$(request.auth.uid)/to/$(toUserId)).data.status == 'accepted'
-         ) ||
-         (
-           existsIn(/follows, /$(request.auth.uid)/to/$(fromUserId)) &&
-           getIn(/follows, /$(request.auth.uid)/to/$(fromUserId)).data.status == 'accepted'
-         ) ||
-         (
-           existsIn(/follows, /$(fromUserId)/to/$(request.auth.uid)) &&
-           getIn(/follows, /$(fromUserId)/to/$(request.auth.uid)).data.status == 'accepted'
-         ) ||
-         (
-           existsIn(/follows, /$(toUserId)/to/$(request.auth.uid)) &&
-           getIn(/follows, /$(toUserId)/to/$(request.auth.uid)).data.status == 'accepted'
-         )
-       );
+      function belongsToFollowed() {
+        return request.auth != null && (
+          isFollowing(request.auth.uid, fromUserId) || isFollowing(request.auth.uid, toUserId)
+        );
       }
 
       allow read: if (
         includesMe() ||
         (
           resource.data.status == 'accepted' &&
-          (isPublic() || belongsToFriend())
+          (isPublic() || belongsToFollowed())
         )
       );
 
       allow create: if (
-        request.auth != null && request.auth.uid == fromUserId && hasFollowFields() && (
+        request.auth != null && request.auth.uid == fromUserId && willHaveFollowFields() && (
           (getIn(/users, toUserId).data.private == true && request.resource.data.status == 'pending') ||
           (getIn(/users, toUserId).data.private == false && request.resource.data.status == 'accepted')
-        ) &&
-        !existsIn(/follows, /$(toUserId)/to/$(fromUserId))
+        )
       );
 
       allow update: if (
         request.auth != null &&
         request.auth.uid == toUserId &&
-        hasFollowFields() &&
+        willHaveFollowFields() &&
         request.resource.data.status == 'accepted'
       );
 
@@ -148,8 +139,8 @@ service cloud.firestore {
     }
 
     match /intentions/{id} {
-      function hasIntentionFields() {
-        return hasFields(['userId', 'name'], []);
+      function willHaveIntentionFields() {
+        return willHaveFields(['userId', 'name'], []);
       }
 
       function isOwner() {
@@ -157,16 +148,7 @@ service cloud.firestore {
       }
 
       function followsOwner() {
-        return request.auth != null && (
-          (
-            existsIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)) &&
-            getIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)).data.status == 'accepted'
-          ) ||
-          (
-            existsIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)) &&
-            getIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)).data.status == 'accepted'
-          )
-        );
+        return request.auth != null && isFollowing(request.auth.uid, resource.data.userId);
       }
 
       function ownerIsPublic() {
@@ -178,13 +160,13 @@ service cloud.firestore {
       allow create: if (
         request.auth != null &&
         request.auth.uid == request.resource.data.userId &&
-        hasIntentionFields()
+        willHaveIntentionFields()
       );
     }
 
     match /posts/{id} {
-      function hasPostFields() {
-        return hasFields(['userId', 'intentionId', 'createdAt'], ['imageUrl', 'description']);
+      function willHavePostFields() {
+        return willHaveFields(['userId', 'intentionId', 'createdAt'], ['imageUrl', 'description']);
       }
 
       function isOwner() {
@@ -192,23 +174,14 @@ service cloud.firestore {
       }
 
       function followsOwner() {
-        return request.auth != null && (
-          (
-            existsIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)) &&
-            getIn(/follows, /$(request.auth.uid)/to/$(resource.data.userId)).data.status == 'accepted'
-          ) ||
-          (
-            existsIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)) &&
-            getIn(/follows, /$(resource.data.userId)/to/$(request.auth.uid)).data.status == 'accepted'
-          )
-        );
+        return request.auth != null && isFollowing(request.auth.uid, resource.data.userId);
       }
 
       function ownerIsPublic() {
         return getIn(/users, resource.data.userId).data.private == false;
       }
 
-      function hasDescOrImg() {
+      function willHaveDescOrImg() {
         return (
           (request.resource.data.description != null && request.resource.data.description != '') ||
           (request.resource.data.imageUrl != null)
@@ -220,11 +193,11 @@ service cloud.firestore {
       allow create: if (
         request.auth != null &&
         request.auth.uid == request.resource.data.userId &&
-        hasPostFields() &&
-        hasDescOrImg()
+        willHavePostFields() &&
+        willHaveDescOrImg()
       );
 
-      allow update: if (isOwner() && changed(['description']));
+      allow update: if (isOwner() && willBeChanged(['description']));
 
       allow delete: if isOwner();
     }

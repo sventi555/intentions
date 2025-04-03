@@ -192,6 +192,33 @@ describe("post rules", () => {
         await assertFails(getDoc(postDoc));
       });
     });
+
+    describe("private owner follows me, but I don't follow them", () => {
+      let postId: string;
+
+      beforeEach(async () => {
+        postId = await addPostWithoutRules(testEnv, {
+          ...mockPost,
+          userId: USER_IDS.privateUser,
+        });
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+          const db = context.firestore();
+
+          const followDoc = doc(
+            db,
+            followDocPath(USER_IDS.privateUser, USER_IDS.authUser),
+          );
+          await setDoc(followDoc, { status: STATUS.accepted });
+        });
+      });
+
+      it("should not allow reading post", async () => {
+        const db = authContext.firestore();
+
+        const postDoc = doc(db, postDocPath(postId));
+        await assertFails(getDoc(postDoc));
+      });
+    });
   });
 
   describe("create", () => {
