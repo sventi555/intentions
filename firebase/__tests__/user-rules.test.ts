@@ -165,29 +165,26 @@ describe("user rules", () => {
       });
     });
 
-    // TODO: consider what happens when updating privaty to public.
-    //       do we need a different model for follow requests, or should we just check
-    //       that all pending requests are accepted as part of this db query?
-
     // ALLOWED
-    it("should allow updating all fields other than username", async () => {
+    it("should allow updating imageUrl", async () => {
       const db = authContext.firestore();
 
       const userDoc = doc(db, userDocPath(USER_ID));
       await assertSucceeds(
         updateDoc(userDoc, {
-          private: !testUser.private,
           imageUrl: "https://new-url.com",
         }),
       );
     });
 
     // NOT ALLOWED
-    it("should not allow updating user's username", async () => {
+    it("should not allow updating user's username or privacy (for now))", async () => {
       const db = authContext.firestore();
 
       const userDoc = doc(db, userDocPath(USER_ID));
-      await assertFails(updateDoc(userDoc, { username: "new-username" }));
+      await assertFails(
+        updateDoc(userDoc, { username: "new-username", private: false }),
+      );
     });
 
     it("should not allow updating username index", async () => {

@@ -85,7 +85,7 @@ service cloud.firestore {
         request.auth != null &&
         request.auth.uid == id &&
         willHaveUserFields() &&
-        willBeUnchanged(['username'])
+        willBeUnchanged(['username', 'private'])
       );
     }
 
