@@ -45,7 +45,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    match /index/users/username/{username} {
+    match /usernames/{username} {
       function userExistsAfter() {
         return (
           existsInAfter(/users, request.resource.data.userId) &&
@@ -69,7 +69,7 @@ service cloud.firestore {
       }
 
       function usernameExistsAfter() {
-        return existsInAfter(/index/users/username, request.resource.data.username);
+        return existsInAfter(/usernames, request.resource.data.username);
       }
 
       allow read: if true;

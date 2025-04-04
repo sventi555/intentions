@@ -28,8 +28,7 @@ const testUser = {
 };
 
 const userDocPath = (userId: string) => `users/${userId}`;
-const usernameDocPath = (username: string) =>
-  `index/users/username/${username}`;
+const usernameDocPath = (username: string) => `usernames/${username}`;
 
 describe("user rules", () => {
   let testEnv: RulesTestEnvironment;
