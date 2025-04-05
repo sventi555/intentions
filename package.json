@@ -48,6 +48,7 @@
     "@firebase/rules-unit-testing": "^4.0.1",
     "@types/react": "~18.3.12",
     "@types/react-test-renderer": "^18.3.0",
+    "concurrently": "^9.1.2",
     "firebase": "^11.5.0",
     "react-test-renderer": "18.3.1",
     "typescript": "^5.3.3",

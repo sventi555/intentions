@@ -1,27 +1,40 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { logger } from "firebase-functions";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 
 initializeApp();
 
-console.log("bunger");
+exports.addPostToFeed = onDocumentCreated(
+  // Represent the hometown
+  { document: "/posts/{postId}", region: "northamerica-northeast2" },
+  async (event) => {
+    const post = event.data;
 
-exports.addPostToFeed = onDocumentCreated("/posts/{postId}", async (event) => {
-  const post = event.data?.data();
+    if (!post) {
+      return;
+    }
 
-  if (!post) {
-    return;
-  }
+    const db = getFirestore();
 
-  const authorId = post.userId;
+    const postId = post.id;
+    const postData = post.data();
 
-  const followingAuthor = await getFirestore()
-    .collection(`follows/${authorId}/from`)
-    .where("status", "==", "accepted")
-    .select()
-    .get();
+    const authorId = postData.userId;
 
-  const followerIds = followingAuthor.docs.map((d) => d.id);
-  logger.debug(followerIds);
-});
+    const followingAuthor = await db
+      .collection(`follows/${authorId}/from`)
+      .where("status", "==", "accepted")
+      .select()
+      .get();
+
+    const followerIds = followingAuthor.docs.map((d) => d.id);
+
+    const writeBatch = db.bulkWriter();
+    followerIds.forEach((followerId) => {
+      const feedPostDoc = db.doc(`/users/${followerId}/feed/${postId}`);
+      writeBatch.set(feedPostDoc, postData);
+    });
+
+    await writeBatch.close();
+  },
+);
