@@ -16,7 +16,14 @@ import {
 } from "firebase/firestore";
 import fs from "node:fs";
 import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  it,
+} from "vitest";
 
 setLogLevel("silent");
 
@@ -48,12 +55,13 @@ describe("user rules", () => {
         port: 8080,
       },
     });
+    await testEnv.clearFirestore();
 
     authContext = testEnv.authenticatedContext(USER_ID);
     unauthContext = testEnv.unauthenticatedContext();
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     await testEnv.clearFirestore();
   });
 

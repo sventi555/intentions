@@ -9,8 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "db-emulator": "cd ./firebase && firebase emulators:start --only firestore",
-    "test-db": "vitest --no-file-parallelism firebase/__tests__"
+    "emulators": "cd ./firebase/functions && concurrently \"pnpm build:watch\" \"firebase emulators:start\"",
+    "test-db": "vitest --no-file-parallelism firebase/rules-tests"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",

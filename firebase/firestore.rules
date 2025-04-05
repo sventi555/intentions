@@ -35,8 +35,8 @@ service cloud.firestore {
 
     function isFollowing(user1Id, user2Id) {
       return (
-        existsIn(/follows, /$(user1Id)/to/$(user2Id)) &&
-        getIn(/follows, /$(user1Id)/to/$(user2Id)).data.status == 'accepted'
+        existsIn(/follows, /$(user2Id)/from/$(user1Id)) &&
+        getIn(/follows, /$(user2Id)/from/$(user1Id)).data.status == 'accepted'
       );
     }
 
@@ -89,7 +89,7 @@ service cloud.firestore {
       );
     }
 
-    match /follows/{fromUserId}/to/{toUserId} {
+    match /follows/{toUserId}/from/{fromUserId} {
       function willHaveFollowFields() {
         return willHaveFields(['status'], []);
       }

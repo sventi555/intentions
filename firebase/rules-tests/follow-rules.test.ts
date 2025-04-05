@@ -15,7 +15,14 @@ import {
 } from "firebase/firestore";
 import fs from "node:fs";
 import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  it,
+} from "vitest";
 
 setLogLevel("silent");
 
@@ -44,7 +51,7 @@ const testUsers = {
 const STATUS = { accepted: "accepted", pending: "pending" };
 
 const followDocPath = (fromId: string, toId: string) =>
-  `follows/${fromId}/to/${toId}`;
+  `follows/${toId}/from/${fromId}`;
 
 const addFollowWithoutRules = async (
   testEnv: RulesTestEnvironment,
@@ -76,14 +83,13 @@ describe("follow rules", () => {
         port: 8080,
       },
     });
+    await testEnv.clearFirestore();
 
     authContext = testEnv.authenticatedContext(USER_IDS.authUser);
     unauthContext = testEnv.unauthenticatedContext();
   });
 
   beforeEach(async () => {
-    await testEnv.clearFirestore();
-
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
@@ -91,6 +97,10 @@ describe("follow rules", () => {
         await setDoc(userDoc, testUsers[userId]);
       }
     });
+  });
+
+  afterEach(async () => {
+    await testEnv.clearFirestore();
   });
 
   afterAll(async () => {

@@ -5,6 +5,16 @@ import {
   RulesTestContext,
   RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
+import fs from "node:fs";
+import path from "node:path";
+import {
+  beforeEach,
+  it,
+  beforeAll,
+  describe,
+  afterEach,
+  afterAll,
+} from "vitest";
 import {
   addDoc,
   collection,
@@ -15,9 +25,6 @@ import {
   setLogLevel,
   updateDoc,
 } from "firebase/firestore";
-import fs from "node:fs";
-import path from "node:path";
-import { beforeAll, beforeEach, describe, it } from "vitest";
 
 setLogLevel("silent");
 
@@ -35,39 +42,28 @@ const testUsers = {
 
 const STATUS = { accepted: "accepted", pending: "pending" };
 
-const mockPost = {
-  userId: "",
-  intentionId: "abcd",
-  createdAt: 1234,
-  description: "i did a thing",
-};
+const followDocPath = (fromId: string, toId: string) =>
+  `follows/${toId}/from/${fromId}`;
 
-const followDocPath = (from: string, to: string) => `follows/${from}/to/${to}`;
-const postDocPath = (id: string) => `posts/${id}`;
+const intentionDocPath = (id: string) => `intentions/${id}`;
 
-const addPostWithoutRules = async (
+const addIntentionWithoutRules = async (
   testEnv: RulesTestEnvironment,
-  post: {
-    userId: string;
-    intentionId: string;
-    createdAt: number;
-    imageUrl?: string;
-    description?: string;
-  },
+  intention: { userId: string; name: string },
 ) => {
-  let postId: string = "";
+  let intentionId: string = "";
 
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
 
-    const postDoc = await addDoc(collection(db, "posts"), post);
-    postId = postDoc.id;
+    const intentionDoc = await addDoc(collection(db, "intentions"), intention);
+    intentionId = intentionDoc.id;
   });
 
-  return postId;
+  return intentionId;
 };
 
-describe("post rules", () => {
+describe("intention rules", () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
@@ -85,14 +81,13 @@ describe("post rules", () => {
         port: 8080,
       },
     });
+    await testEnv.clearFirestore();
 
     authContext = testEnv.authenticatedContext(USER_IDS.authUser);
     unauthContext = testEnv.unauthenticatedContext();
   });
 
   beforeEach(async () => {
-    await testEnv.clearFirestore();
-
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
@@ -102,51 +97,59 @@ describe("post rules", () => {
     });
   });
 
+  afterEach(async () => {
+    await testEnv.clearFirestore();
+  });
+
+  afterAll(async () => {
+    await testEnv.cleanup();
+  });
+
   describe("read", () => {
     // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string = "";
+    describe("requester owns intention", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.authUser,
+          name: "cook grub",
         });
       });
 
-      it("should allow reading ", async () => {
+      it("should allow reading intention", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertSucceeds(getDoc(intentionDoc));
       });
     });
 
-    describe("post owner is public", () => {
-      let postId: string;
+    describe("intention owner is public", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.publicUser,
+          name: "cook grub",
         });
       });
 
-      it("should allow reading post", async () => {
+      it("should allow reading intention", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertSucceeds(getDoc(intentionDoc));
       });
     });
 
-    describe("requester follows post owner", () => {
-      let postId: string;
+    describe("requester follows intention owner", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.privateUser,
+          name: "cook grub",
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
           const db = context.firestore();
@@ -159,47 +162,47 @@ describe("post rules", () => {
         });
       });
 
-      it("should allow reading post", async () => {
+      it("should allow reading intention", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertSucceeds(getDoc(intentionDoc));
       });
     });
 
     // NOT ALLOWED
     describe("owner is private", () => {
-      let postId: string;
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.privateUser,
+          name: "cook grub",
         });
       });
 
       it("should not allow reading when authenticated", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(getDoc(intentionDoc));
       });
 
       it("should not allow reading when unauthenticated", async () => {
         const db = unauthContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(getDoc(intentionDoc));
       });
     });
 
     describe("private owner follows me, but I don't follow them", () => {
-      let postId: string;
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.privateUser,
+          name: "cook grub",
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
           const db = context.firestore();
@@ -212,174 +215,149 @@ describe("post rules", () => {
         });
       });
 
-      it("should not allow reading post", async () => {
+      it("should not allow reading intention", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(getDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(getDoc(intentionDoc));
       });
     });
   });
 
   describe("create", () => {
     // ALLOWED
-    it("should allow creating a post with requester id", async () => {
+    it("should allow creating an intention with requester id", async () => {
       const db = authContext.firestore();
 
       await assertSucceeds(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
+        addDoc(collection(db, "intentions"), {
           userId: USER_IDS.authUser,
+          name: "Cook grub",
         }),
       );
     });
 
     // NOT ALLOWED
-    it("should not allow creating a post without auth", async () => {
+    it("should not allow creating an intention without auth", async () => {
       const db = unauthContext.firestore();
 
       await assertFails(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
+        addDoc(collection(db, "intentions"), {
           userId: USER_IDS.authUser,
+          name: "Cook grub",
         }),
       );
     });
 
-    it("should not allow creating a post with different owner", async () => {
+    it("should not allow creating an intention with different owner", async () => {
       const db = authContext.firestore();
 
       await assertFails(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
+        addDoc(collection(db, "intentions"), {
           userId: USER_IDS.publicUser,
-        }),
-      );
-    });
-
-    it("should not allow creating a post with no description and image", async () => {
-      const db = authContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "posts"), {
-          userId: USER_IDS.authUser,
-          intentionId: "abcd",
-          createdAt: 1234,
+          name: "Cook grub",
         }),
       );
     });
   });
 
   describe("update", () => {
-    // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string;
+    // NOT ALLOWED
+    describe("requester owns intention", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.authUser,
+          name: "cook grub",
         });
       });
 
-      it("should allow updating description", async () => {
+      it("should not allow updating name", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(
-          updateDoc(postDoc, { description: "new description" }),
-        );
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
       });
 
-      // NOT ALLOWED
-      it("should not allow updating other fields", async () => {
+      it("should not allow updating userId", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
         await assertFails(
-          updateDoc(postDoc, {
-            userId: "new-id",
-            createdAt: 5678,
-            imageUrl: "https://new-url.com",
-            intentionId: "new-intention-id",
-          }),
+          updateDoc(intentionDoc, { userId: USER_IDS.publicUser }),
         );
       });
     });
 
-    describe("requester does not own post", () => {
-      let postId: string;
+    describe("requester does not own intention", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.publicUser,
+          name: "cook grub",
         });
       });
 
-      it("should not allow updating when signed in", async () => {
+      it("should not allow updating intention when signed in", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(
-          updateDoc(postDoc, { description: "new description" }),
-        );
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
       });
 
-      it("should not allow updating when unauthenticated", async () => {
+      it("should not allow updating intention when unauthenticated", async () => {
         const db = unauthContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(
-          updateDoc(postDoc, { description: "new description" }),
-        );
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
       });
     });
   });
 
   describe("delete", () => {
-    // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string;
+    // NOT ALLOWED
+    describe("requester owns intention", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.authUser,
+          name: "cook grub",
         });
       });
 
-      it("should allow deletion", async () => {
+      it("should not allow deleting (for now)", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(deleteDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(deleteDoc(intentionDoc));
       });
     });
 
-    // NOT ALLOWED
-    describe("requester does not own post", () => {
-      let postId: string;
+    describe("requester does not own intention", () => {
+      let intentionId: string;
 
       beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
+        intentionId = await addIntentionWithoutRules(testEnv, {
           userId: USER_IDS.publicUser,
+          name: "cook grub",
         });
       });
 
       it("should not allow deleting when signed in", async () => {
         const db = authContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(deleteDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(deleteDoc(intentionDoc));
       });
 
       it("should not allow deleting when unauthenticated", async () => {
         const db = unauthContext.firestore();
 
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(deleteDoc(postDoc));
+        const intentionDoc = doc(db, intentionDocPath(intentionId));
+        await assertFails(deleteDoc(intentionDoc));
       });
     });
   });
