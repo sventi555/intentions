@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "emulators": "cd ./firebase/functions && concurrently \"pnpm build:watch\" \"firebase emulators:start\"",
+    "emulators": "cd ./firebase/functions && concurrently \"pnpm build:watch\" \"firebase emulators:start --only firestore,functions\"",
     "test-db": "vitest --no-file-parallelism firebase/rules-tests"
   },
   "dependencies": {
