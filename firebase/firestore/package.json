@@ -1,0 +1,12 @@
+{
+  "name": "firestore",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore \"vitest run --no-file-parallelism\"",
+    "test:watch": "firebase emulators:exec --only firestore \"vitest watch --no-file-parallelism\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "vitest": "^3.1.1"
+  },
+  "private": true
+}
