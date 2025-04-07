@@ -5,16 +5,6 @@ import {
   RulesTestContext,
   RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import fs from "node:fs";
-import path from "node:path";
-import {
-  beforeEach,
-  it,
-  beforeAll,
-  describe,
-  afterEach,
-  afterAll,
-} from "vitest";
 import {
   addDoc,
   collection,
@@ -25,6 +15,9 @@ import {
   setLogLevel,
   updateDoc,
 } from "firebase/firestore";
+import fs from "node:fs";
+import path from "node:path";
+import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 
 setLogLevel("silent");
 
@@ -81,13 +74,14 @@ describe("intention rules", () => {
         port: 8080,
       },
     });
-    await testEnv.clearFirestore();
 
     authContext = testEnv.authenticatedContext(USER_IDS.authUser);
     unauthContext = testEnv.unauthenticatedContext();
   });
 
   beforeEach(async () => {
+    await testEnv.clearFirestore();
+
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
@@ -95,10 +89,6 @@ describe("intention rules", () => {
         await setDoc(userDoc, testUsers[userId]);
       }
     });
-  });
-
-  afterEach(async () => {
-    await testEnv.clearFirestore();
   });
 
   afterAll(async () => {
