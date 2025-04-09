@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import functionsTest from "firebase-functions-test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { addPostToFeeds, deleteFeedPosts, updateFeedPosts } from ".";
+import { addPostToFeeds, deletePostFromFeeds, updatePostInFeeds } from "./post";
 
 const test = functionsTest();
 
@@ -14,7 +14,7 @@ const USER_IDS = {
 
 const follow = { from: USER_IDS.user2, to: USER_IDS.user1 };
 
-describe("feed functions", () => {
+describe("post functions", () => {
   beforeEach(async () => {
     const collections = await db.listCollections();
     const deletePromises = collections.map((c) => db.recursiveDelete(c));
@@ -60,8 +60,8 @@ describe("feed functions", () => {
     });
   });
 
-  describe("updateFeedPosts", () => {
-    const updateFeedPostsWrap = test.wrap(updateFeedPosts);
+  describe("updatePostInFeeds", () => {
+    const updatePostInFeedsWrap = test.wrap(updatePostInFeeds);
 
     describe("when a post is updated", () => {
       const postId = "post-1";
@@ -91,7 +91,7 @@ describe("feed functions", () => {
           `/posts/${postId}`,
         );
 
-        await updateFeedPostsWrap({ data: test.makeChange(before, after) });
+        await updatePostInFeedsWrap({ data: test.makeChange(before, after) });
 
         const feedPost = await db
           .doc(`/users/${follow.from}/feed/${postId}`)
@@ -101,8 +101,8 @@ describe("feed functions", () => {
     });
   });
 
-  describe("deleteFeedPosts", () => {
-    const deleteFeedPostsWrap = test.wrap(deleteFeedPosts);
+  describe("deletePostFromFeeds", () => {
+    const deletePostFromFeedsWrap = test.wrap(deletePostFromFeeds);
 
     describe("when a post is deleted", () => {
       const postId = "post-1";
@@ -126,7 +126,7 @@ describe("feed functions", () => {
           `/posts/${postId}`,
         );
 
-        await deleteFeedPostsWrap({ data: snap });
+        await deletePostFromFeedsWrap({ data: snap });
 
         const feedPost = await db
           .doc(`/users/${follow.from}/feed/${postId}`)

@@ -8,9 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint",
-    "emulators": "cd ./firebase && firebase emulators:start --only firestore,functions",
-    "test:be": "pnpm --dir ./firebase test"
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",

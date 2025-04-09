@@ -1,2 +1,1 @@
-- write tests for firebase functions
-- hook up feed on FE
+- follow/unfollow function tests
