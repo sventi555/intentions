@@ -89,6 +89,10 @@ service cloud.firestore {
       );
     }
 
+    match /users/{id}/feed/{postId} {
+      allow read: if request.auth != null && request.auth.uid == id;
+    }
+
     match /follows/{toUserId}/from/{fromUserId} {
       function willHaveFollowFields() {
         return willHaveFields(['status'], []);
@@ -166,7 +170,10 @@ service cloud.firestore {
 
     match /posts/{id} {
       function willHavePostFields() {
-        return willHaveFields(['userId', 'intentionId', 'createdAt'], ['imageUrl', 'description']);
+        return willHaveFields(
+          ['userId', 'user', 'intentionId', 'intention', 'createdAt'],
+          ['imageUrl', 'description']
+        );
       }
 
       function isOwner() {

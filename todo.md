@@ -1,1 +1,1 @@
-- follow/unfollow function tests
+- feed rules and tests
