@@ -1,13 +1,17 @@
-import { Firestore, getFirestore } from "firebase-admin/firestore";
+import { Firestore } from "firebase-admin/firestore";
 import {
+  DocumentOptions,
   onDocumentCreated,
   onDocumentDeleted,
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
-import { functionOpts } from "./util";
+import { db, functionOpts } from "./app";
 
-const opts = { ...functionOpts, document: "/posts/{postId}" };
-const db = getFirestore();
+export const documentPath = "/posts/{postId}";
+const opts: DocumentOptions<typeof documentPath> = {
+  ...functionOpts,
+  document: documentPath,
+};
 
 export const addPostToFeeds = onDocumentCreated(opts, async (event) => {
   const post = event.data;

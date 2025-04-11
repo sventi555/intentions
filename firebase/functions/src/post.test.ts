@@ -1,11 +1,12 @@
-import { getFirestore } from "firebase-admin/firestore";
-import functionsTest from "firebase-functions-test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { addPostToFeeds, deletePostFromFeeds, updatePostInFeeds } from "./post";
-
-const test = functionsTest();
-
-const db = getFirestore();
+import { clearDatabase, makeChangeSnap, makeSnap, wrap } from "../test-utils";
+import { db } from "./app";
+import {
+  addPostToFeeds,
+  deletePostFromFeeds,
+  documentPath,
+  updatePostInFeeds,
+} from "./post";
 
 const USER_IDS = {
   user1: "user-1",
@@ -16,10 +17,7 @@ const follow = { from: USER_IDS.user2, to: USER_IDS.user1 };
 
 describe("post functions", () => {
   beforeEach(async () => {
-    const collections = await db.listCollections();
-    const deletePromises = collections.map((c) => db.recursiveDelete(c));
-
-    await Promise.all(deletePromises);
+    await clearDatabase();
 
     const writeBatch = db.bulkWriter();
 
@@ -34,20 +32,15 @@ describe("post functions", () => {
   });
 
   describe("addPostToFeeds", () => {
-    const addPostToFeedsWrap = test.wrap(addPostToFeeds);
+    const addPostToFeedsWrap = wrap(addPostToFeeds);
 
     describe("when a post is created", () => {
-      beforeEach(async () => {});
-
       it("should add post to all follower feeds", async () => {
         const postId = "post-1";
         const postData = { userId: follow.to, description: "hello" };
-        const snap = test.firestore.makeDocumentSnapshot(
-          postData,
-          `/posts/${postId}`,
-        );
+        const snap = makeSnap(documentPath, { postId }, postData);
 
-        await addPostToFeedsWrap({ data: snap });
+        await addPostToFeedsWrap(snap);
 
         const feedPost = await db
           .doc(`/users/${follow.from}/feed/${postId}`)
@@ -61,7 +54,7 @@ describe("post functions", () => {
   });
 
   describe("updatePostInFeeds", () => {
-    const updatePostInFeedsWrap = test.wrap(updatePostInFeeds);
+    const updatePostInFeedsWrap = wrap(updatePostInFeeds);
 
     describe("when a post is updated", () => {
       const postId = "post-1";
@@ -80,18 +73,15 @@ describe("post functions", () => {
       });
 
       it("should update post in all follower feeds", async () => {
-        const before = test.firestore.makeDocumentSnapshot(
-          postDataBefore,
-          `/posts/${postId}`,
-        );
-
         const postDataAfter = { ...postDataBefore, description: "goodbye" };
-        const after = test.firestore.makeDocumentSnapshot(
+        const snap = makeChangeSnap(
+          documentPath,
+          { postId },
+          postDataBefore,
           postDataAfter,
-          `/posts/${postId}`,
         );
 
-        await updatePostInFeedsWrap({ data: test.makeChange(before, after) });
+        await updatePostInFeedsWrap(snap);
 
         const feedPost = await db
           .doc(`/users/${follow.from}/feed/${postId}`)
@@ -102,7 +92,7 @@ describe("post functions", () => {
   });
 
   describe("deletePostFromFeeds", () => {
-    const deletePostFromFeedsWrap = test.wrap(deletePostFromFeeds);
+    const deletePostFromFeedsWrap = wrap(deletePostFromFeeds);
 
     describe("when a post is deleted", () => {
       const postId = "post-1";
@@ -121,12 +111,9 @@ describe("post functions", () => {
       });
 
       it("should delete post from all follower feeds", async () => {
-        const snap = test.firestore.makeDocumentSnapshot(
-          postData,
-          `/posts/${postId}`,
-        );
+        const snap = makeSnap(documentPath, { postId }, postData);
 
-        await deletePostFromFeedsWrap({ data: snap });
+        await deletePostFromFeedsWrap(snap);
 
         const feedPost = await db
           .doc(`/users/${follow.from}/feed/${postId}`)
