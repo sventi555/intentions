@@ -7,10 +7,10 @@ import {
 } from "firebase-functions/v2/firestore";
 import { db, functionOpts } from "./app";
 
-export const documentPath = "/posts/{postId}";
-const opts: DocumentOptions<typeof documentPath> = {
+export const postDocumentPath = "/posts/{postId}";
+const opts: DocumentOptions<typeof postDocumentPath> = {
   ...functionOpts,
-  document: documentPath,
+  document: postDocumentPath,
 };
 
 export const addPostToFeeds = onDocumentCreated(opts, async (event) => {

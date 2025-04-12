@@ -6,10 +6,10 @@ import {
 } from "firebase-functions/firestore";
 import { db, functionOpts } from "./app";
 
-export const documentPath = "/follows/{toUserId}/from/{fromUserId}";
-const opts: DocumentOptions<typeof documentPath> = {
+export const followDocumentPath = "/follows/{toUserId}/from/{fromUserId}";
+const opts: DocumentOptions<typeof followDocumentPath> = {
   ...functionOpts,
-  document: documentPath,
+  document: followDocumentPath,
 };
 
 export const addPublicFollowPostsToFeed = onDocumentCreated(
