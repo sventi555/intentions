@@ -8,12 +8,10 @@ import {
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   setDoc,
   setLogLevel,
-  updateDoc,
 } from "firebase/firestore";
 import fs from "node:fs";
 import path from "node:path";
@@ -35,11 +33,22 @@ const testUsers = {
 
 const STATUS = { accepted: "accepted", pending: "pending" };
 
-const mockPost = {
+interface Post {
+  userId: string;
+  user: any;
+  intentionId: string;
+  intention: any;
+  createdAt: number;
+  description?: string;
+  imageUrl?: string;
+}
+
+const mockPost: Post = {
   userId: "",
-  intentionId: "abcd",
-  createdAt: 1234,
-  description: "i did a thing",
+  user: {},
+  intentionId: "",
+  intention: {},
+  createdAt: 0,
 };
 
 const followDocPath = (from: string, to: string) =>
@@ -48,13 +57,7 @@ const postDocPath = (id: string) => `posts/${id}`;
 
 const addPostWithoutRules = async (
   testEnv: RulesTestEnvironment,
-  post: {
-    userId: string;
-    intentionId: string;
-    createdAt: number;
-    imageUrl?: string;
-    description?: string;
-  },
+  post: Post,
 ) => {
   let postId: string = "";
 
@@ -222,169 +225,6 @@ describe("post rules", () => {
 
         const postDoc = doc(db, postDocPath(postId));
         await assertFails(getDoc(postDoc));
-      });
-    });
-  });
-
-  describe("create", () => {
-    // ALLOWED
-    it("should allow creating a post with requester id", async () => {
-      const db = authContext.firestore();
-
-      await assertSucceeds(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
-          userId: USER_IDS.authUser,
-        }),
-      );
-    });
-
-    // NOT ALLOWED
-    it("should not allow creating a post without auth", async () => {
-      const db = unauthContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
-          userId: USER_IDS.authUser,
-        }),
-      );
-    });
-
-    it("should not allow creating a post with different owner", async () => {
-      const db = authContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "posts"), {
-          ...mockPost,
-          userId: USER_IDS.publicUser,
-        }),
-      );
-    });
-
-    it("should not allow creating a post with no description and image", async () => {
-      const db = authContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "posts"), {
-          userId: USER_IDS.authUser,
-          intentionId: "abcd",
-          createdAt: 1234,
-        }),
-      );
-    });
-  });
-
-  describe("update", () => {
-    // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string;
-
-      beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
-          userId: USER_IDS.authUser,
-        });
-      });
-
-      it("should allow updating description", async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(
-          updateDoc(postDoc, { description: "new description" }),
-        );
-      });
-
-      // NOT ALLOWED
-      it("should not allow updating other fields", async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(
-          updateDoc(postDoc, {
-            userId: "new-id",
-            createdAt: 5678,
-            imageUrl: "https://new-url.com",
-            intentionId: "new-intention-id",
-          }),
-        );
-      });
-    });
-
-    describe("requester does not own post", () => {
-      let postId: string;
-
-      beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
-          userId: USER_IDS.publicUser,
-        });
-      });
-
-      it("should not allow updating when signed in", async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(
-          updateDoc(postDoc, { description: "new description" }),
-        );
-      });
-
-      it("should not allow updating when unauthenticated", async () => {
-        const db = unauthContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(
-          updateDoc(postDoc, { description: "new description" }),
-        );
-      });
-    });
-  });
-
-  describe("delete", () => {
-    // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string;
-
-      beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
-          userId: USER_IDS.authUser,
-        });
-      });
-
-      it("should allow deletion", async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(deleteDoc(postDoc));
-      });
-    });
-
-    // NOT ALLOWED
-    describe("requester does not own post", () => {
-      let postId: string;
-
-      beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
-          userId: USER_IDS.publicUser,
-        });
-      });
-
-      it("should not allow deleting when signed in", async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(deleteDoc(postDoc));
-      });
-
-      it("should not allow deleting when unauthenticated", async () => {
-        const db = unauthContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertFails(deleteDoc(postDoc));
       });
     });
   });

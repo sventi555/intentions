@@ -2,35 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function willHaveFields(required, optional) {
-      let allAllowedFields = required.concat(optional);
-
-      return request.resource.data.keys().hasAll(required) &&
-      request.resource.data.keys().hasOnly(allAllowedFields);
-    }
-
-    function willBeUnchanged(fields) {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
-    }
-
-    function willBeChanged(fields) {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
-    }
-
     function existsIn(collection, id) {
       return exists(/databases/$(database)/documents/$(collection)/$(id));
     }
 
-    function existsInAfter(collection ,id) {
-      return existsAfter(/databases/$(database)/documents/$(collection)/$(id));
-    }
-
     function getIn(collection, id) {
       return get(/databases/$(database)/documents/$(collection)/$(id));
-    }
-
-    function getInAfter(collection, id) {
-      return getAfter(/databases/$(database)/documents/$(collection)/$(id));
     }
 
     function isFollowing(user1Id, user2Id) {
@@ -46,58 +23,18 @@ service cloud.firestore {
     }
 
     match /usernames/{username} {
-      function userExistsAfter() {
-        return (
-          existsInAfter(/users, request.resource.data.userId) &&
-          getInAfter(/users, request.resource.data.userId).data.username == username
-        );
-      }
-
       allow read: if true;
-
-      allow create: if (
-        request.auth != null &&
-        request.auth.uid == request.resource.data.userId &&
-        willHaveFields(['userId'], []) &&
-        userExistsAfter()
-      );
     }
 
     match /users/{id} {
-      function willHaveUserFields() {
-        return willHaveFields(['username', 'private'], ['imageUrl']);
-      }
-
-      function usernameExistsAfter() {
-        return existsInAfter(/usernames, request.resource.data.username);
-      }
-
       allow read: if true;
-
-      allow create: if (
-        request.auth != null &&
-        request.auth.uid == id &&
-        willHaveUserFields() &&
-        usernameExistsAfter()
-      );
-
-      allow update: if (
-        request.auth != null &&
-        request.auth.uid == id &&
-        willHaveUserFields() &&
-        willBeUnchanged(['username', 'private'])
-      );
     }
 
-    match /users/{id}/feed/{postId} {
-      allow read: if request.auth != null && request.auth.uid == id;
+    match /users/{userId}/feed/{postId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
     }
 
     match /follows/{toUserId}/from/{fromUserId} {
-      function willHaveFollowFields() {
-        return willHaveFields(['status'], []);
-      }
-
       function isPublic() {
         return (
           getIn(/users, fromUserId).data.private == false ||
@@ -122,31 +59,9 @@ service cloud.firestore {
           (isPublic() || belongsToFollowed())
         )
       );
-
-      allow create: if (
-        request.auth != null && request.auth.uid == fromUserId && willHaveFollowFields() && (
-          (getIn(/users, toUserId).data.private == true && request.resource.data.status == 'pending') ||
-          (getIn(/users, toUserId).data.private == false && request.resource.data.status == 'accepted')
-        )
-      );
-
-      allow update: if (
-        request.auth != null &&
-        request.auth.uid == toUserId &&
-        willHaveFollowFields() &&
-        request.resource.data.status == 'accepted'
-      );
-
-      allow delete: if (
-        request.auth != null && (request.auth.uid == toUserId || request.auth.uid == fromUserId)
-      );
     }
 
     match /intentions/{id} {
-      function willHaveIntentionFields() {
-        return willHaveFields(['userId', 'name'], []);
-      }
-
       function isOwner() {
         return request.auth != null && request.auth.uid == resource.data.userId;
       }
@@ -160,22 +75,9 @@ service cloud.firestore {
       }
 
       allow read: if (isOwner() || ownerIsPublic() || followsOwner());
-
-      allow create: if (
-        request.auth != null &&
-        request.auth.uid == request.resource.data.userId &&
-        willHaveIntentionFields()
-      );
     }
 
     match /posts/{id} {
-      function willHavePostFields() {
-        return willHaveFields(
-          ['userId', 'user', 'intentionId', 'intention', 'createdAt'],
-          ['imageUrl', 'description']
-        );
-      }
-
       function isOwner() {
         return request.auth != null && request.auth.uid == resource.data.userId;
       }
@@ -188,32 +90,7 @@ service cloud.firestore {
         return getIn(/users, resource.data.userId).data.private == false;
       }
 
-      function willHaveDescOrImg() {
-        return (
-          (request.resource.data.description != null && request.resource.data.description != '') ||
-          (request.resource.data.imageUrl != null)
-        );
-      }
-
       allow read: if (isOwner() || ownerIsPublic() || followsOwner());
-
-      allow create: if (
-        request.auth != null &&
-        request.auth.uid == request.resource.data.userId &&
-        willHavePostFields() &&
-        willHaveDescOrImg()
-      );
-
-      allow update: if (isOwner() && willBeChanged(['description']));
-
-      allow delete: if isOwner();
     }
   }
-
-
-
-
-
-
-
 }

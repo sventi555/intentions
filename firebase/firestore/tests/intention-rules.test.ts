@@ -8,12 +8,10 @@ import {
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   setDoc,
   setLogLevel,
-  updateDoc,
 } from "firebase/firestore";
 import fs from "node:fs";
 import path from "node:path";
@@ -210,144 +208,6 @@ describe("intention rules", () => {
 
         const intentionDoc = doc(db, intentionDocPath(intentionId));
         await assertFails(getDoc(intentionDoc));
-      });
-    });
-  });
-
-  describe("create", () => {
-    // ALLOWED
-    it("should allow creating an intention with requester id", async () => {
-      const db = authContext.firestore();
-
-      await assertSucceeds(
-        addDoc(collection(db, "intentions"), {
-          userId: USER_IDS.authUser,
-          name: "Cook grub",
-        }),
-      );
-    });
-
-    // NOT ALLOWED
-    it("should not allow creating an intention without auth", async () => {
-      const db = unauthContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "intentions"), {
-          userId: USER_IDS.authUser,
-          name: "Cook grub",
-        }),
-      );
-    });
-
-    it("should not allow creating an intention with different owner", async () => {
-      const db = authContext.firestore();
-
-      await assertFails(
-        addDoc(collection(db, "intentions"), {
-          userId: USER_IDS.publicUser,
-          name: "Cook grub",
-        }),
-      );
-    });
-  });
-
-  describe("update", () => {
-    // NOT ALLOWED
-    describe("requester owns intention", () => {
-      let intentionId: string;
-
-      beforeEach(async () => {
-        intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.authUser,
-          name: "cook grub",
-        });
-      });
-
-      it("should not allow updating name", async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
-      });
-
-      it("should not allow updating userId", async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(
-          updateDoc(intentionDoc, { userId: USER_IDS.publicUser }),
-        );
-      });
-    });
-
-    describe("requester does not own intention", () => {
-      let intentionId: string;
-
-      beforeEach(async () => {
-        intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.publicUser,
-          name: "cook grub",
-        });
-      });
-
-      it("should not allow updating intention when signed in", async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
-      });
-
-      it("should not allow updating intention when unauthenticated", async () => {
-        const db = unauthContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(updateDoc(intentionDoc, { name: "new name" }));
-      });
-    });
-  });
-
-  describe("delete", () => {
-    // NOT ALLOWED
-    describe("requester owns intention", () => {
-      let intentionId: string;
-
-      beforeEach(async () => {
-        intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.authUser,
-          name: "cook grub",
-        });
-      });
-
-      it("should not allow deleting (for now)", async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(deleteDoc(intentionDoc));
-      });
-    });
-
-    describe("requester does not own intention", () => {
-      let intentionId: string;
-
-      beforeEach(async () => {
-        intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.publicUser,
-          name: "cook grub",
-        });
-      });
-
-      it("should not allow deleting when signed in", async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(deleteDoc(intentionDoc));
-      });
-
-      it("should not allow deleting when unauthenticated", async () => {
-        const db = unauthContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertFails(deleteDoc(intentionDoc));
       });
     });
   });

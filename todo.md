@@ -1,1 +1,1 @@
-- feed rules and tests
+- writing should be handled purely via functions to accomodate weird nosql db structure
