@@ -1,8 +1,17 @@
-import { HttpsError, onCall } from "firebase-functions/v2/https";
+import {
+  CallableOptions,
+  HttpsError,
+  onCall,
+} from "firebase-functions/v2/https";
+import { z } from "zod";
 import { db, functionOpts } from "./app";
 
-exports.followUser = onCall({ ...functionOpts }, async (req) => {
-  // check if signed in
+const opts: CallableOptions = { ...functionOpts };
+
+const followUserSchema = z.object({
+  userId: z.string(),
+});
+exports.followUser = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -10,15 +19,21 @@ exports.followUser = onCall({ ...functionOpts }, async (req) => {
     );
   }
 
-  const requesterId = req.auth.uid;
-
-  const followedUserId = req.data.userId;
-  if (!followedUserId) {
-    throw new HttpsError("invalid-argument", "Must specify userId to follow.");
+  const parseRes = followUserSchema.safeParse(req.data);
+  if (!parseRes.success) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Validation error.",
+      parseRes.error.issues,
+    );
   }
+  const data = parseRes.data;
+
+  const requesterId = req.auth.uid;
+  const followedUserId = data.userId;
 
   // prevent from following self
-  if (followedUserId === req.auth.uid) {
+  if (followedUserId === requesterId) {
     throw new HttpsError("invalid-argument", "Cannot follow yourself.");
   }
 
@@ -67,11 +82,11 @@ exports.followUser = onCall({ ...functionOpts }, async (req) => {
   return followData;
 });
 
-exports.respondToFollow = onCall({ ...functionOpts }, async (req) => {
-  // update the follow request to accepted (as long as it's pending) and
-  // add the posts to requester's feed. Eventually send notification.
-
-  // check if signed in
+const respondToFollowSchema = z.object({
+  userId: z.string(),
+  action: z.enum(["accept", "decline"]),
+});
+exports.respondToFollow = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -79,23 +94,19 @@ exports.respondToFollow = onCall({ ...functionOpts }, async (req) => {
     );
   }
 
+  const parseRes = respondToFollowSchema.safeParse(req.data);
+  if (!parseRes.success) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Validation error.",
+      parseRes.error.issues,
+    );
+  }
+  const data = parseRes.data;
+
   const requesterId = req.auth.uid;
-
-  const fromUserId = req.data.userId;
-  if (!fromUserId) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Must specify userId to accept follow.",
-    );
-  }
-
-  const { action } = req.data.action;
-  if (!action) {
-    throw new HttpsError(
-      "invalid-argument",
-      'Must specify action: "accept" or "decline".',
-    );
-  }
+  const fromUserId = data.userId;
+  const action = data.action;
 
   const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
   const followDocResource = await followDoc.get();
@@ -138,7 +149,11 @@ exports.respondToFollow = onCall({ ...functionOpts }, async (req) => {
   await writeBatch.close();
 });
 
-exports.removeFollow = onCall({ ...functionOpts }, async (req) => {
+const removeFollowSchema = z.object({
+  direction: z.enum(["to", "from"]),
+  userId: z.string(),
+});
+exports.removeFollow = onCall(opts, async (req) => {
   // check if signed in
   if (!req.auth) {
     throw new HttpsError(
@@ -149,20 +164,17 @@ exports.removeFollow = onCall({ ...functionOpts }, async (req) => {
 
   const requesterId = req.auth.uid;
 
-  const { direction, userId } = req.data;
-  if (!direction || !(direction === "from" || direction === "to")) {
+  const parseRes = removeFollowSchema.safeParse(req.data);
+  if (!parseRes.success) {
     throw new HttpsError(
       "invalid-argument",
-      'Must specify direction: "from" or "to".',
+      "Validation error.",
+      parseRes.error.issues,
     );
   }
-  if (!userId) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Must specify userId to remove follow.",
-    );
-  }
+  const { data } = parseRes;
 
+  const { direction, userId } = data;
   const fromUserId = direction === "from" ? userId : requesterId;
   const toUserId = direction === "from" ? requesterId : userId;
   const followDoc = db.doc(`follows/${toUserId}/from/${fromUserId}`);

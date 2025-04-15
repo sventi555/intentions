@@ -4,12 +4,10 @@ import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBpIB9oNdO15y23LI0zCld-FPCWIIiHteU",
-  authDomain: "intentions-dbc94.firebaseapp.com",
-  projectId: "intentions-dbc94",
-  storageBucket: "intentions-dbc94.firebasestorage.app",
-  messagingSenderId: "5182096725",
-  appId: "1:5182096725:web:fe065b141e1a16e157dbdc",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
