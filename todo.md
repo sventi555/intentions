@@ -1,1 +1,5 @@
-- writing should be handled purely via functions to accomodate weird nosql db structure
+functions for:
+    - writing user data
+    - writing posts
+    - writing intentions
+    - writing follows

@@ -1,91 +1,184 @@
-import {
-  DocumentOptions,
-  onDocumentCreated,
-  onDocumentDeleted,
-  onDocumentUpdated,
-} from "firebase-functions/firestore";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db, functionOpts } from "./app";
 
-export const followDocumentPath = "/follows/{toUserId}/from/{fromUserId}";
-const opts: DocumentOptions<typeof followDocumentPath> = {
-  ...functionOpts,
-  document: followDocumentPath,
-};
+exports.followUser = onCall({ ...functionOpts }, async (req) => {
+  // check if signed in
+  if (!req.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "Must be signed in to follow someone.",
+    );
+  }
 
-export const addPublicFollowPostsToFeed = onDocumentCreated(
-  opts,
-  async (event) => {
-    const follow = event.data;
+  const requesterId = req.auth.uid;
 
-    if (!follow || follow.data().status !== "accepted") {
-      return;
-    }
+  const followedUserId = req.data.userId;
+  if (!followedUserId) {
+    throw new HttpsError("invalid-argument", "Must specify userId to follow.");
+  }
 
-    const { toUserId, fromUserId } = event.params;
+  // prevent from following self
+  if (followedUserId === req.auth.uid) {
+    throw new HttpsError("invalid-argument", "Cannot follow yourself.");
+  }
 
-    const toUserPosts = await db
+  // check for pre-existing follow
+  const followDoc = db.doc(`follows/${followedUserId}/from/${requesterId}`);
+  const followDocResource = await followDoc.get();
+  if (followDocResource.exists) {
+    throw new HttpsError(
+      "already-exists",
+      followDocResource.data()?.status === "pending"
+        ? "Already requested to follow this user."
+        : "Already following this user.",
+    );
+  }
+
+  // get recipient privacy
+  const recipient = await db.doc(`users/${followedUserId}`).get();
+  if (!recipient.exists) {
+    throw new HttpsError("not-found", "User does not exist.");
+  }
+  const isPrivate = recipient.data()?.private;
+
+  const writeBatch = db.bulkWriter();
+
+  // create follow
+  const followData = {
+    status: isPrivate ? "pending" : "accepted",
+  };
+  writeBatch.set(followDoc, followData);
+
+  // if status is immediately accepted (recipient is public), update feed
+  if (!isPrivate) {
+    const followedPosts = await db
       .collection("posts")
-      .where("userId", "==", toUserId)
+      .where("userId", "==", followedUserId)
       .get();
 
-    const writeBatch = db.bulkWriter();
-    toUserPosts.forEach((post) => {
-      const feedPostDoc = db.doc(`/users/${fromUserId}/feed/${post.id}`);
+    followedPosts.forEach((post) => {
+      const feedPostDoc = db.doc(`users/${requesterId}/feed/${post.id}`);
       writeBatch.set(feedPostDoc, post.data());
     });
+  }
 
-    await writeBatch.close();
-  },
-);
+  await writeBatch.close();
 
-export const addPrivateFollowPostsToFeed = onDocumentUpdated(
-  opts,
-  async (event) => {
-    const follow = event.data;
+  return followData;
+});
 
-    if (!follow || follow.after.data().status !== "accepted") {
-      return;
+exports.respondToFollow = onCall({ ...functionOpts }, async (req) => {
+  // update the follow request to accepted (as long as it's pending) and
+  // add the posts to requester's feed. Eventually send notification.
+
+  // check if signed in
+  if (!req.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "Must be signed in to respond to a follow request.",
+    );
+  }
+
+  const requesterId = req.auth.uid;
+
+  const fromUserId = req.data.userId;
+  if (!fromUserId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Must specify userId to accept follow.",
+    );
+  }
+
+  const { action } = req.data.action;
+  if (!action) {
+    throw new HttpsError(
+      "invalid-argument",
+      'Must specify action: "accept" or "decline".',
+    );
+  }
+
+  const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
+  const followDocResource = await followDoc.get();
+  if (!followDocResource.exists) {
+    throw new HttpsError("not-found", "No follow request from this user.");
+  }
+
+  const followData = followDocResource.data()!;
+
+  // bail out early if request has already been accepted
+  if (followData.status === "accepted") {
+    if (action === "decline") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cannot decline a request that's already accepted. Delete it instead.",
+      );
     }
 
-    const { toUserId, fromUserId } = event.params;
+    return;
+  }
 
-    const toUserPosts = await db
+  const writeBatch = db.bulkWriter();
+
+  if (action === "accept") {
+    writeBatch.update(followDoc, { status: "accepted" });
+
+    const followedPosts = await db
       .collection("posts")
-      .where("userId", "==", toUserId)
+      .where("userId", "==", requesterId)
       .get();
 
-    const writeBatch = db.bulkWriter();
-    toUserPosts.forEach((post) => {
-      const feedPostDoc = db.doc(`/users/${fromUserId}/feed/${post.id}`);
+    followedPosts.forEach((post) => {
+      const feedPostDoc = db.doc(`users/${fromUserId}/feed/${post.id}`);
       writeBatch.set(feedPostDoc, post.data());
     });
+  } else {
+    writeBatch.delete(followDoc);
+  }
 
-    await writeBatch.close();
-  },
-);
+  await writeBatch.close();
+});
 
-export const removeFollowPostsFromFeed = onDocumentDeleted(
-  opts,
-  async (event) => {
-    const follow = event.data;
+exports.removeFollow = onCall({ ...functionOpts }, async (req) => {
+  // check if signed in
+  if (!req.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "Must be signed in to remove a follow.",
+    );
+  }
 
-    if (!follow) {
-      return;
-    }
+  const requesterId = req.auth.uid;
 
-    const { toUserId, fromUserId } = event.params;
+  const { direction, userId } = req.data;
+  if (!direction || !(direction === "from" || direction === "to")) {
+    throw new HttpsError(
+      "invalid-argument",
+      'Must specify direction: "from" or "to".',
+    );
+  }
+  if (!userId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Must specify userId to remove follow.",
+    );
+  }
 
-    const toUserPosts = await db
-      .collection("posts")
-      .where("userId", "==", toUserId)
-      .get();
+  const fromUserId = direction === "from" ? userId : requesterId;
+  const toUserId = direction === "from" ? requesterId : userId;
+  const followDoc = db.doc(`follows/${toUserId}/from/${fromUserId}`);
 
-    const writeBatch = db.bulkWriter();
-    toUserPosts.forEach((post) => {
-      const feedPostDoc = db.doc(`/users/${fromUserId}/feed/${post.id}`);
-      writeBatch.delete(feedPostDoc);
-    });
+  const writeBatch = db.bulkWriter();
 
-    await writeBatch.close();
-  },
-);
+  writeBatch.delete(followDoc);
+
+  const followedPosts = await db
+    .collection(`users/${fromUserId}/feed`)
+    .where("userId", "==", toUserId)
+    .get();
+
+  followedPosts.forEach((post) => {
+    writeBatch.delete(post.ref);
+  });
+
+  await writeBatch.close();
+});
