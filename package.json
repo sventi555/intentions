@@ -6,7 +6,10 @@
   "scripts": {
     "test": "pnpm -r --sequential test",
     "deploy-firebase": "cd firebase/functions && mv node_modules nm_tmp && npm install --package-lock-only && mv nm_tmp node_modules && firebase deploy --only firestore,functions",
-    "emulators": "pnpm --filter functions build && cd firebase && firebase emulators:start --only functions,firestore"
+    "emulators": "pnpm --filter functions build && concurrently \"pnpm --filter functions build:watch\" \"cd firebase && firebase emulators:start\""
   },
-  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }

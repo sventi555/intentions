@@ -1,0 +1,9 @@
+{
+  "name": "scripts",
+  "scripts": {
+    "get-auth-token": "FIREBASE_AUTH_EMULATOR_HOST=\"127.0.0.1:9099\" node get-auth-token"
+  },
+  "devDependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}

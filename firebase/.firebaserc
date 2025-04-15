@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "intentions-dbc94"
+    "default": "demo-intentions",
+    "prod": "intentions-dbc94"
   }
 }
