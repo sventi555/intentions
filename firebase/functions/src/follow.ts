@@ -5,6 +5,7 @@ import {
 } from "firebase-functions/v2/https";
 import { z } from "zod";
 import { db, functionOpts } from "./app";
+import { parseValidatedData } from "./validate";
 
 const opts: CallableOptions = { ...functionOpts };
 
@@ -19,15 +20,7 @@ exports.followUser = onCall(opts, async (req) => {
     );
   }
 
-  const parseRes = followUserSchema.safeParse(req.data);
-  if (!parseRes.success) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Validation error.",
-      parseRes.error.issues,
-    );
-  }
-  const data = parseRes.data;
+  const data = parseValidatedData(req, followUserSchema);
 
   const requesterId = req.auth.uid;
   const followedUserId = data.userId;
@@ -94,19 +87,10 @@ exports.respondToFollow = onCall(opts, async (req) => {
     );
   }
 
-  const parseRes = respondToFollowSchema.safeParse(req.data);
-  if (!parseRes.success) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Validation error.",
-      parseRes.error.issues,
-    );
-  }
-  const data = parseRes.data;
+  const data = parseValidatedData(req, respondToFollowSchema);
 
   const requesterId = req.auth.uid;
-  const fromUserId = data.userId;
-  const action = data.action;
+  const { userId: fromUserId, action } = data;
 
   const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
   const followDocResource = await followDoc.get();
@@ -154,7 +138,6 @@ const removeFollowSchema = z.object({
   userId: z.string(),
 });
 exports.removeFollow = onCall(opts, async (req) => {
-  // check if signed in
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -162,21 +145,13 @@ exports.removeFollow = onCall(opts, async (req) => {
     );
   }
 
+  const data = parseValidatedData(req, removeFollowSchema);
+
   const requesterId = req.auth.uid;
-
-  const parseRes = removeFollowSchema.safeParse(req.data);
-  if (!parseRes.success) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Validation error.",
-      parseRes.error.issues,
-    );
-  }
-  const { data } = parseRes;
-
   const { direction, userId } = data;
   const fromUserId = direction === "from" ? userId : requesterId;
   const toUserId = direction === "from" ? requesterId : userId;
+
   const followDoc = db.doc(`follows/${toUserId}/from/${fromUserId}`);
 
   const writeBatch = db.bulkWriter();
