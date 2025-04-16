@@ -93,12 +93,10 @@ exports.respondToFollow = onCall(opts, async (req) => {
   const { userId: fromUserId, action } = data;
 
   const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
-  const followDocResource = await followDoc.get();
-  if (!followDocResource.exists) {
+  const followData = (await followDoc.get()).data();
+  if (!followData) {
     throw new HttpsError("not-found", "No follow request from this user.");
   }
-
-  const followData = followDocResource.data()!;
 
   // bail out early if request has already been accepted
   if (followData.status === "accepted") {
