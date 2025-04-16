@@ -1,2 +1,2 @@
-export * from "./follow";
-export * from "./post";
+export * from "./routes/follow";
+export * from "./routes/post";

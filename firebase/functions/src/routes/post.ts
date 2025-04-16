@@ -5,14 +5,13 @@ import {
 } from "firebase-functions/v2/https";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
-import { db, functionOpts } from "./app";
-import { parseValidatedData } from "./validate";
+import { db, functionOpts } from "../app";
+import { parseValidatedData } from "../validate";
 
 const opts: CallableOptions = { ...functionOpts };
 
 const addPostSchema = z.object({
   intentionId: z.string(),
-  createdAt: z.number().int().min(0),
   imageUrl: z.string().optional(),
   description: z.string().optional(),
 });
@@ -40,15 +39,18 @@ export const addPost = onCall(opts, async (req) => {
     );
   }
 
-  // Assuming that the user creating flow works, thus not validating here...
   const user = await db.doc(`users/${requesterId}`).get();
   const userData = user.data();
+  if (!userData) {
+    throw new HttpsError("internal", "User information is missing.");
+  }
 
   const postData = {
     ...data,
     userId: requesterId,
-    user: userData,
-    intention: intentionData,
+    user: { username: userData.username, profilePic: userData.profilePic },
+    intention: { name: intentionData.name },
+    createdAt: Date.now(),
   };
 
   const writeBatch = db.bulkWriter();

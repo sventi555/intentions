@@ -4,15 +4,15 @@ import {
   onCall,
 } from "firebase-functions/v2/https";
 import { z } from "zod";
-import { db, functionOpts } from "./app";
-import { parseValidatedData } from "./validate";
+import { db, functionOpts } from "../app";
+import { parseValidatedData } from "../validate";
 
 const opts: CallableOptions = { ...functionOpts };
 
 const followUserSchema = z.object({
   userId: z.string(),
 });
-exports.followUser = onCall(opts, async (req) => {
+export const followUser = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -79,7 +79,7 @@ const respondToFollowSchema = z.object({
   userId: z.string(),
   action: z.enum(["accept", "decline"]),
 });
-exports.respondToFollow = onCall(opts, async (req) => {
+export const respondToFollow = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -135,7 +135,7 @@ const removeFollowSchema = z.object({
   direction: z.enum(["to", "from"]),
   userId: z.string(),
 });
-exports.removeFollow = onCall(opts, async (req) => {
+export const removeFollow = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
