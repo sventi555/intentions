@@ -4,15 +4,15 @@ import {
   onCall,
 } from "firebase-functions/v2/https";
 import { z } from "zod";
-import { db, functionOpts } from "./app";
-import { parseValidatedData } from "./validate";
+import { db, functionOpts } from "../app";
+import { parseValidatedData } from "../validate";
 
 const opts: CallableOptions = { ...functionOpts };
 
 const followUserSchema = z.object({
   userId: z.string(),
 });
-exports.followUser = onCall(opts, async (req) => {
+export const followUser = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -79,7 +79,7 @@ const respondToFollowSchema = z.object({
   userId: z.string(),
   action: z.enum(["accept", "decline"]),
 });
-exports.respondToFollow = onCall(opts, async (req) => {
+export const respondToFollow = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
@@ -93,12 +93,10 @@ exports.respondToFollow = onCall(opts, async (req) => {
   const { userId: fromUserId, action } = data;
 
   const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
-  const followDocResource = await followDoc.get();
-  if (!followDocResource.exists) {
+  const followData = (await followDoc.get()).data();
+  if (!followData) {
     throw new HttpsError("not-found", "No follow request from this user.");
   }
-
-  const followData = followDocResource.data()!;
 
   // bail out early if request has already been accepted
   if (followData.status === "accepted") {
@@ -137,7 +135,7 @@ const removeFollowSchema = z.object({
   direction: z.enum(["to", "from"]),
   userId: z.string(),
 });
-exports.removeFollow = onCall(opts, async (req) => {
+export const removeFollow = onCall(opts, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
       "unauthenticated",
