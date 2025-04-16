@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "intentions",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
