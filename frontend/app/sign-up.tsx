@@ -1,8 +1,7 @@
 import { PageWrapper } from "@/components/page-wrapper";
-import { auth, db } from "@/config/firebase";
+import { auth } from "@/config/firebase";
 import { Link, useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, writeBatch } from "firebase/firestore";
 import { useState } from "react";
 import { Button, Switch, Text, TextInput, View } from "react-native";
 
@@ -28,15 +27,15 @@ const SignUp = () => {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, pass);
 
-      const batch = writeBatch(db);
-
-      const userDoc = doc(db, "/users", user.uid);
-      batch.set(userDoc, { username, private: isPrivate });
-
-      const usernameDoc = doc(db, "/usernames", username);
-      batch.set(usernameDoc, { userId: user.uid });
-
-      await batch.commit();
+      // const batch = writeBatch(db);
+      //
+      // const userDoc = doc(db, "/users", user.uid);
+      // batch.set(userDoc, { username, private: isPrivate });
+      //
+      // const usernameDoc = doc(db, "/usernames", username);
+      // batch.set(usernameDoc, { userId: user.uid });
+      //
+      // await batch.commit();
     } catch (err) {
       setErrMsg("Something went wrong, please try again.");
     }

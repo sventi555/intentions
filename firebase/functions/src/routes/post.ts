@@ -12,7 +12,7 @@ const opts: CallableOptions = { ...functionOpts };
 
 const addPostSchema = z.object({
   intentionId: z.string(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().optional(), // base64 string
   description: z.string().optional(),
 });
 export const addPost = onCall(opts, async (req) => {
