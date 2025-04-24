@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/page-wrapper";
-import { auth, db, functions } from "@/config/firebase";
+import { db, functions } from "@/config/firebase";
+import { useUser } from "@/hooks/user";
 import { Picker } from "@react-native-picker/picker";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -11,6 +12,8 @@ import { useState } from "react";
 import { Button, TextInput, View } from "react-native";
 
 const CreatePost = () => {
+  const user = useUser();
+
   const [intentionId, setIntentionId] = useState("make-music");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -34,14 +37,11 @@ const CreatePost = () => {
   };
 
   const { data: intentions } = useQuery({
-    queryKey: ["intentions"],
+    queryKey: ["intentions", user?.uid],
     queryFn: async () => {
       return (
         await getDocs(
-          query(
-            collection(db, "intentions"),
-            where("userId", "==", auth.currentUser?.uid),
-          ),
+          query(collection(db, "intentions"), where("userId", "==", user?.uid)),
         )
       ).docs;
     },

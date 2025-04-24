@@ -103,6 +103,10 @@ export const addPost = onCall(opts, async (req) => {
     writeBatch.set(feedPost, postData);
   });
 
+  // add post to own feed
+  const ownFeedPost = db.doc(`users/${requesterId}/feed/${postId}`);
+  writeBatch.set(ownFeedPost, postData);
+
   await writeBatch.close();
 });
 
@@ -142,6 +146,9 @@ export const updatePost = onCall(opts, async (req) => {
     writeBatch.update(feedPost, updatedData);
   });
 
+  const ownFeedPost = db.doc(`users/${requesterId}/feed/${postId}`);
+  writeBatch.update(ownFeedPost, updatedData);
+
   await writeBatch.close();
 });
 
@@ -177,6 +184,9 @@ export const deletePost = onCall(opts, async (req) => {
     const feedPost = db.doc(`users/${follower.id}/feed/${postId}`);
     writeBatch.delete(feedPost);
   });
+
+  const ownFeedPost = db.doc(`users/${requesterId}/feed/${postId}`);
+  writeBatch.delete(ownFeedPost);
 
   await writeBatch.close();
 });

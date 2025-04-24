@@ -1,36 +1,39 @@
+import { storage } from "@/config/firebase";
 import { dayjs } from "@/utils/time";
 import { Image } from "expo-image";
+import { getDownloadURL, ref } from "firebase/storage";
+import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 interface PostProps {
-  // TODO: embed username and profile pic in posts on BE
+  userId: string;
   user: {
-    imageUrl?: string;
     username: string;
-    id: string;
   };
   createdAt: number;
-  // TODO: embed intention name in posts
+  intentionId: string;
   intention: {
     name: string;
-    id: string;
   };
-  imageUrl?: string;
+  image?: string;
   description?: string;
 }
 
 export const Post: React.FC<PostProps> = (props) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props.image) {
+      getDownloadURL(ref(storage, props.image))
+        .then((url) => setImageUrl(url))
+        .catch(() => {});
+    }
+  }, []);
+
   return (
     <View style={{ borderRadius: 8, borderWidth: 1, padding: 8, gap: 4 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {props.user.imageUrl ? (
-          <Image
-            source={props.user.imageUrl}
-            style={{ width: 32, aspectRatio: 1, borderRadius: "100%" }}
-          />
-        ) : (
-          <Text>DP</Text>
-        )}
+        <Text>DP</Text>
         <Text>{props.user.username}</Text>
         <Text style={{ color: "grey" }}>
           {dayjs(props.createdAt).fromNow()}
@@ -46,11 +49,8 @@ export const Post: React.FC<PostProps> = (props) => {
       >
         {props.intention.name}
       </Text>
-      {props.imageUrl ? (
-        <Image
-          source="https://picsum.photos/600"
-          style={{ width: "100%", aspectRatio: 1 }}
-        />
+      {imageUrl ? (
+        <Image source={imageUrl} style={{ width: "100%", aspectRatio: 1 }} />
       ) : null}
       {props.description ? <Text>{props.description}</Text> : null}
     </View>

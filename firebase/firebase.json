@@ -14,11 +14,12 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": [
-        "pnpm --dir \"$RESOURCE_DIR\" run build"
-      ]
+      "predeploy": ["pnpm --dir \"$RESOURCE_DIR\" run build"]
     }
   ],
+  "storage": {
+    "rules": "storage/storage.rules"
+  },
   "emulators": {
     "auth": {
       "port": 9099
@@ -33,9 +34,9 @@
       "enabled": true,
       "port": 4000
     },
-    "singleProjectMode": true,
     "storage": {
       "port": 9199
-    }
+    },
+    "singleProjectMode": true
   }
 }
