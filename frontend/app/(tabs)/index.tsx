@@ -16,7 +16,7 @@ const Feed = () => {
     queryFn: async () => {
       const feedPostsQuery = query(
         collection(db, `/users/${user?.uid}/feed`),
-        orderBy("createdAt"),
+        orderBy("createdAt", "desc"),
         limit(10),
       );
 
@@ -30,7 +30,7 @@ const Feed = () => {
         <PageWrapper>
           <View style={{ gap: 8 }}>
             {feedPosts?.map((post) => {
-              return <Post {...(post.data() as any)} />;
+              return <Post key={post.id} {...(post.data() as any)} />;
             })}
           </View>
         </PageWrapper>

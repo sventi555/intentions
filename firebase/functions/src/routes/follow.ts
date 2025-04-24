@@ -55,7 +55,7 @@ export const followUser = onCall(opts, async (req) => {
   const followData = {
     status: isPrivate ? "pending" : "accepted",
   };
-  writeBatch.set(followDoc, followData);
+  writeBatch.create(followDoc, followData);
 
   // if status is immediately accepted (recipient is public), update feed
   if (!isPrivate) {
@@ -66,7 +66,7 @@ export const followUser = onCall(opts, async (req) => {
 
     followedPosts.forEach((post) => {
       const feedPostDoc = db.doc(`users/${requesterId}/feed/${post.id}`);
-      writeBatch.set(feedPostDoc, post.data());
+      writeBatch.create(feedPostDoc, post.data());
     });
   }
 
@@ -122,7 +122,7 @@ export const respondToFollow = onCall(opts, async (req) => {
 
     followedPosts.forEach((post) => {
       const feedPostDoc = db.doc(`users/${fromUserId}/feed/${post.id}`);
-      writeBatch.set(feedPostDoc, post.data());
+      writeBatch.create(feedPostDoc, post.data());
     });
   } else {
     writeBatch.delete(followDoc);

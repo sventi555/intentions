@@ -5,3 +5,5 @@
 
 - infinite scroll feed posts
 - useMutation on submission actions
+
+- how do we recover from a bad user creation?

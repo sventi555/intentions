@@ -76,7 +76,7 @@ export const addPost = onCall(opts, async (req) => {
 
     const imageId = uuid();
     imageFileName = `posts/${requesterId}/${imageId}.${extension}`;
-    await bucket.file(imageFileName).save(image);
+    await bucket.file(imageFileName).save(Buffer.from(image, "base64"));
   }
 
   const postData = {
@@ -94,18 +94,18 @@ export const addPost = onCall(opts, async (req) => {
   // add post to posts collection
   const postId = uuid();
   const postDoc = db.doc(`posts/${postId}`);
-  writeBatch.set(postDoc, postData);
+  writeBatch.create(postDoc, postData);
 
   // add post to follower feeds
   const followers = await db.collection(`follows/${requesterId}/from`).get();
   followers.docs.forEach((follower) => {
     const feedPost = db.doc(`users/${follower.id}/feed/${postId}`);
-    writeBatch.set(feedPost, postData);
+    writeBatch.create(feedPost, postData);
   });
 
   // add post to own feed
   const ownFeedPost = db.doc(`users/${requesterId}/feed/${postId}`);
-  writeBatch.set(ownFeedPost, postData);
+  writeBatch.create(ownFeedPost, postData);
 
   await writeBatch.close();
 });

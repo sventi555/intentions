@@ -14,7 +14,7 @@ service firebase.storage {
         );
       }
 
-      allow read: if followsOwner();
+      allow read: if (request.auth.uid == ownerId || followsOwner());
     }
   }
 }

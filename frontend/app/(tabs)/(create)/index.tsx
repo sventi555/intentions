@@ -2,21 +2,35 @@ import { PageWrapper } from "@/components/page-wrapper";
 import { db, functions } from "@/config/firebase";
 import { useUser } from "@/hooks/user";
 import { Picker } from "@react-native-picker/picker";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { useState } from "react";
 import { Button, TextInput, View } from "react-native";
 
 const CreatePost = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const user = useUser();
 
-  const [intentionId, setIntentionId] = useState("make-music");
+  const [intentionId, setIntentionId] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<string | null>(null);
+
+  const { data: intentions } = useQuery({
+    queryKey: ["intentions", user?.uid],
+    queryFn: async () => {
+      return (
+        await getDocs(
+          query(collection(db, "intentions"), where("userId", "==", user?.uid)),
+        )
+      ).docs;
+    },
+  });
+  const selectedIntentionId = intentionId || intentions?.[0]?.id;
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -31,21 +45,27 @@ const CreatePost = () => {
     }
   };
 
-  const onSubmit = async () => {
-    const addPost = httpsCallable(functions, "addPost");
-    await addPost({ intentionId, description, ...(image ? { image } : {}) });
+  const resetState = () => {
+    setDescription("");
+    setImage(null);
+    setIntentionId("");
   };
 
-  const { data: intentions } = useQuery({
-    queryKey: ["intentions", user?.uid],
-    queryFn: async () => {
-      return (
-        await getDocs(
-          query(collection(db, "intentions"), where("userId", "==", user?.uid)),
-        )
-      ).docs;
-    },
-  });
+  const onSubmit = async () => {
+    const addPost = httpsCallable(functions, "addPost");
+    await addPost({
+      intentionId: selectedIntentionId,
+      description,
+      ...(image ? { image } : {}),
+    });
+
+    await queryClient.invalidateQueries({ queryKey: ["feed", user?.uid] });
+    resetState();
+
+    router.back();
+  };
+
+  const valid = selectedIntentionId && (image || description);
 
   return (
     <PageWrapper>
@@ -70,7 +90,7 @@ const CreatePost = () => {
           onChangeText={setDescription}
           value={description}
         />
-        <Button title="post" onPress={onSubmit} />
+        <Button title="post" disabled={!valid} onPress={onSubmit} />
       </View>
     </PageWrapper>
   );

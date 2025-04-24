@@ -1,6 +1,5 @@
 import { CallableOptions, HttpsError } from "firebase-functions/https";
 import { onCall } from "firebase-functions/v2/https";
-import { v4 as uuid } from "uuid";
 import z from "zod";
 import { auth, db, functionOpts } from "../app";
 import { parseValidatedData } from "../validate";
@@ -33,13 +32,10 @@ export const createUser = onCall(opts, async (req) => {
   }
 
   try {
-    await db.runTransaction(async (transaction) => {
-      const userId = uuid();
-      const userDoc = db.doc(`users/${userId}`);
-      transaction.create(userDoc, { email, username, private: isPrivate });
-
-      await auth.createUser({ email, password });
-    });
+    const user = await auth.createUser({ email, password });
+    await db
+      .doc(`users/${user.uid}`)
+      .create({ email, username, private: isPrivate });
   } catch {
     throw new HttpsError("internal", "Failed to create user.");
   }
