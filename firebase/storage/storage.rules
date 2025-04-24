@@ -1,12 +1,20 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
     match /{allPaths=**} {
       allow read, write: if false;
+    }
+
+    match /posts/{ownerId}/{imageId} {
+      function followsOwner() {
+        return (
+          firestore.exists(/databases/(default)/documents/follows/$(ownerId)/from/$(request.auth.uid)) &&
+          firestore.get(/databases/(default)/documents/follows/$(ownerId)/from/$(request.auth.uid)).data.status == 'accepted'
+        );
+      }
+
+      allow read: if followsOwner();
     }
   }
 }

@@ -1,7 +1,8 @@
 import { PageWrapper } from "@/components/page-wrapper";
-import { auth } from "@/config/firebase";
+import { auth, functions } from "@/config/firebase";
 import { Link, useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { httpsCallable } from "firebase/functions";
 import { useState } from "react";
 import { Button, Switch, Text, TextInput, View } from "react-native";
 
@@ -10,7 +11,7 @@ const SignUp = () => {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const [password, setPassword] = useState("");
   const [passRepeat, setPassRepeat] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
 
@@ -19,28 +20,19 @@ const SignUp = () => {
   const createUser = async () => {
     setErrMsg("");
 
-    if (pass !== passRepeat) {
+    if (password !== passRepeat) {
       setErrMsg("passwords do not match");
       return;
     }
 
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-
-      // const batch = writeBatch(db);
-      //
-      // const userDoc = doc(db, "/users", user.uid);
-      // batch.set(userDoc, { username, private: isPrivate });
-      //
-      // const usernameDoc = doc(db, "/usernames", username);
-      // batch.set(usernameDoc, { userId: user.uid });
-      //
-      // await batch.commit();
+      const createUserFn = httpsCallable(functions, "createUser");
+      await createUserFn({ email, username, password, isPrivate });
+      await signInWithEmailAndPassword(auth, email, password);
+      router.navigate("/(tabs)");
     } catch (err) {
       setErrMsg("Something went wrong, please try again.");
     }
-
-    router.navigate("/(tabs)");
   };
 
   return (
@@ -62,8 +54,8 @@ const SignUp = () => {
         />
         <TextInput
           placeholder="password"
-          value={pass}
-          onChangeText={(text) => setPass(text)}
+          value={password}
+          onChangeText={(text) => setPassword(text)}
           onSubmitEditing={createUser}
         />
         <TextInput

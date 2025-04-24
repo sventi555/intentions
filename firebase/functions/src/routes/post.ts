@@ -75,7 +75,7 @@ export const addPost = onCall(opts, async (req) => {
     const bucket = storage.bucket();
 
     const imageId = uuid();
-    imageFileName = `posts/${imageId}.${extension}`;
+    imageFileName = `posts/${requesterId}/${imageId}.${extension}`;
     await bucket.file(imageFileName).save(image);
   }
 

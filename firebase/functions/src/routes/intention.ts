@@ -7,7 +7,7 @@ import { parseValidatedData } from "../validate";
 const opts: CallableOptions = { ...functionOpts };
 
 const addIntentionSchema = z.object({
-  name: z.string(),
+  name: z.string().nonempty(),
 });
 export const addIntention = onCall(opts, async (req) => {
   if (!req.auth) {
