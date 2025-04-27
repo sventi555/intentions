@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish_api_image:
+    runs-on: ubuntu-latest
+    outputs:
+      image_version: ${{ steps.api_meta.outputs.version }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP artifact registry
+        uses: docker/login-action@v3
+        with:
+          registry: https://us-east4-docker.pkg.dev
+          username: _json_key_base64
+          password: ${{ secrets.GCP_CREDS }}
+
+      - name: Extract api metadata (tags, labels) for Docker
+        id: api_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.IMAGE_REGISTRY }}/api
+
+      - name: Build and push api Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: dockerfiles/api.dockerfile
+          push: true
+          tags: ${{ steps.api_meta.outputs.tags }}
+          labels: ${{ steps.api_meta.outputs.labels }}
+
+  update_api_deployment:
+    runs-on: ubuntu-latest
+    needs: publish_api_image
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDS }}
+
+      - uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: api
+          region: us-east4
+          image: ${{ vars.IMAGE_REGISTRY }}/api:${{ needs.publish_api_image.outputs.image_version }}
