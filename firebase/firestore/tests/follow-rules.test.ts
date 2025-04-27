@@ -55,7 +55,6 @@ describe('follow rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
-  let unauthContext: RulesTestContext;
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
@@ -160,7 +159,7 @@ describe('follow rules', () => {
     ])(
       'includes someone public and is accepted: follow %o',
       ({ from, to, status }) => {
-        beforeEach(async ({}) => {
+        beforeEach(async () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
         });
 
@@ -187,7 +186,7 @@ describe('follow rules', () => {
     ])(
       "includes someone I'm following and is accepted: follow %o",
       ({ from, to, status }) => {
-        beforeEach(async ({}) => {
+        beforeEach(async () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
           await addFollowWithoutRules(testEnv, {
             from: USER_IDS.authUser,
@@ -220,7 +219,7 @@ describe('follow rules', () => {
     ])(
       "includes someone that follows me, but I don't follow them, and is accepted: follow %o",
       ({ from, to, status }) => {
-        beforeEach(async ({}) => {
+        beforeEach(async () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
           await addFollowWithoutRules(testEnv, {
             from: USER_IDS.privateUser,
@@ -252,7 +251,7 @@ describe('follow rules', () => {
     ])(
       'is pending and does not include requester: follow %o',
       ({ from, to, status }) => {
-        beforeEach(async ({}) => {
+        beforeEach(async () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
         });
 
