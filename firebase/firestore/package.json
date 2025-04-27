@@ -2,12 +2,19 @@
   "name": "firestore",
   "scripts": {
     "test": "firebase emulators:exec --only firestore \"vitest run --no-file-parallelism\"",
-    "test:watch": "firebase emulators:exec --only firestore \"vitest watch --no-file-parallelism\""
+    "test:watch": "firebase emulators:exec --only firestore \"vitest watch --no-file-parallelism\"",
+    "check-types": "tsc",
+    "format": "prettier --check .",
+    "lint": "eslint"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^4.0.1",
-    "firebase": "^11.5.0",
-    "vitest": "^3.1.1"
+    "@eslint/js": "9.13.0",
+    "@firebase/rules-unit-testing": "4.0.1",
+    "eslint": "9.13.0",
+    "firebase": "11.5.0",
+    "typescript": "5.6.2",
+    "typescript-eslint": "8.11.0",
+    "vitest": "3.1.1"
   },
   "private": true
 }

@@ -1,15 +1,22 @@
 {
-  "name": "intentions",
+  "name": "fullstack-template",
+  "version": "1.0.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "test": "pnpm -r --sequential test",
-    "deploy-firebase": "cd firebase/functions && mv node_modules nm_tmp && npm install --package-lock-only && mv nm_tmp node_modules && firebase deploy",
-    "emulators": "pnpm --filter functions build && concurrently \"pnpm --filter functions build:watch\" \"cd firebase && firebase emulators:start\""
+    "dev": "turbo dev",
+    "check-types": "turbo check-types",
+    "build": "turbo check-types build",
+    "start": "turbo start",
+    "lint": "turbo format lint",
+    "emulators": "cd firebase && firebase emulators:start",
+    "prepare": "husky"
   },
-  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971",
   "devDependencies": {
-    "concurrently": "^9.1.2"
-  }
+    "husky": "9.1.7",
+    "lint-staged": "15.2.10",
+    "turbo": "2.3.1"
+  },
+  "packageManager": "pnpm@9.14.2"
 }

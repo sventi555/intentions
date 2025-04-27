@@ -2,9 +2,9 @@ import {
   assertFails,
   assertSucceeds,
   initializeTestEnvironment,
-  RulesTestContext,
-  RulesTestEnvironment,
-} from "@firebase/rules-unit-testing";
+  type RulesTestContext,
+  type RulesTestEnvironment,
+} from '@firebase/rules-unit-testing';
 import {
   addDoc,
   collection,
@@ -12,26 +12,26 @@ import {
   getDoc,
   setDoc,
   setLogLevel,
-} from "firebase/firestore";
-import fs from "node:fs";
-import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+} from 'firebase/firestore';
+import fs from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
-setLogLevel("silent");
+setLogLevel('silent');
 
 const USER_IDS = {
-  authUser: "authUser",
-  privateUser: "privateUser",
-  publicUser: "publicUser",
+  authUser: 'authUser',
+  privateUser: 'privateUser',
+  publicUser: 'publicUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: "booga", private: true },
-  [USER_IDS.privateUser]: { username: "private-user", private: true },
-  [USER_IDS.publicUser]: { username: "public-user", private: false },
+  [USER_IDS.authUser]: { username: 'booga', private: true },
+  [USER_IDS.privateUser]: { username: 'private-user', private: true },
+  [USER_IDS.publicUser]: { username: 'public-user', private: false },
 };
 
-const STATUS = { accepted: "accepted", pending: "pending" };
+const STATUS = { accepted: 'accepted', pending: 'pending' };
 
 interface Post {
   userId: string;
@@ -44,9 +44,9 @@ interface Post {
 }
 
 const mockPost: Post = {
-  userId: "",
+  userId: '',
   user: {},
-  intentionId: "",
+  intentionId: '',
   intention: {},
   createdAt: 0,
 };
@@ -59,19 +59,19 @@ const addPostWithoutRules = async (
   testEnv: RulesTestEnvironment,
   post: Post,
 ) => {
-  let postId: string = "";
+  let postId: string = '';
 
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
 
-    const postDoc = await addDoc(collection(db, "posts"), post);
+    const postDoc = await addDoc(collection(db, 'posts'), post);
     postId = postDoc.id;
   });
 
   return postId;
 };
 
-describe("post rules", () => {
+describe('post rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
@@ -79,13 +79,13 @@ describe("post rules", () => {
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
-      projectId: "intentions-test",
+      projectId: 'intentions-test',
       firestore: {
         rules: fs.readFileSync(
-          path.join(__dirname, "../firestore.rules"),
-          "utf8",
+          path.join(__dirname, '../firestore.rules'),
+          'utf8',
         ),
-        host: "127.0.0.1",
+        host: '127.0.0.1',
         port: 8080,
       },
     });
@@ -100,7 +100,7 @@ describe("post rules", () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
-        const userDoc = doc(db, "users", userId);
+        const userDoc = doc(db, 'users', userId);
         await setDoc(userDoc, testUsers[userId]);
       }
     });
@@ -110,10 +110,10 @@ describe("post rules", () => {
     await testEnv.cleanup();
   });
 
-  describe("read", () => {
+  describe('read', () => {
     // ALLOWED
-    describe("requester owns post", () => {
-      let postId: string = "";
+    describe('requester owns post', () => {
+      let postId: string = '';
 
       beforeEach(async () => {
         postId = await addPostWithoutRules(testEnv, {
@@ -122,7 +122,7 @@ describe("post rules", () => {
         });
       });
 
-      it("should allow reading ", async () => {
+      it('should allow reading ', async () => {
         const db = authContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));
@@ -130,7 +130,7 @@ describe("post rules", () => {
       });
     });
 
-    describe("post owner is public", () => {
+    describe('post owner is public', () => {
       let postId: string;
 
       beforeEach(async () => {
@@ -140,7 +140,7 @@ describe("post rules", () => {
         });
       });
 
-      it("should allow reading post", async () => {
+      it('should allow reading post', async () => {
         const db = authContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));
@@ -148,7 +148,7 @@ describe("post rules", () => {
       });
     });
 
-    describe("requester follows post owner", () => {
+    describe('requester follows post owner', () => {
       let postId: string;
 
       beforeEach(async () => {
@@ -167,7 +167,7 @@ describe("post rules", () => {
         });
       });
 
-      it("should allow reading post", async () => {
+      it('should allow reading post', async () => {
         const db = authContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));
@@ -176,7 +176,7 @@ describe("post rules", () => {
     });
 
     // NOT ALLOWED
-    describe("owner is private", () => {
+    describe('owner is private', () => {
       let postId: string;
 
       beforeEach(async () => {
@@ -186,14 +186,14 @@ describe("post rules", () => {
         });
       });
 
-      it("should not allow reading when authenticated", async () => {
+      it('should not allow reading when authenticated', async () => {
         const db = authContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));
         await assertFails(getDoc(postDoc));
       });
 
-      it("should not allow reading when unauthenticated", async () => {
+      it('should not allow reading when unauthenticated', async () => {
         const db = unauthContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));
@@ -220,7 +220,7 @@ describe("post rules", () => {
         });
       });
 
-      it("should not allow reading post", async () => {
+      it('should not allow reading post', async () => {
         const db = authContext.firestore();
 
         const postDoc = doc(db, postDocPath(postId));

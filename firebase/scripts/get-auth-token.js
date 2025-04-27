@@ -1,19 +1,29 @@
-const { initializeApp } = require("firebase-admin/app");
-const { getAuth } = require("firebase-admin/auth");
+import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
-const userId = process.argv[2];
+const username = process.argv[2];
 
 if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-  console.warn("FIREBASE_AUTH_EMULATOR_HOST variable not set");
+  console.warn('auth emulator host not set');
 }
 
-if (!userId) {
-  console.error("must provide user id as first argument");
+if (!process.env.FIRESTORE_EMULATOR_HOST) {
+  console.warn('firestore emulator host not set');
+}
+
+if (!username) {
+  console.error('must provide username as first argument');
   process.exit(1);
 }
 
-initializeApp();
+initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
 
-getAuth()
-  .createCustomToken(userId)
-  .then((token) => console.log(token));
+const db = getFirestore();
+const auth = getAuth();
+db.collection('users')
+  .where('username', '==', username)
+  .get()
+  .then((res) => {
+    auth.createCustomToken(res.docs[0].id).then((token) => console.log(token));
+  });

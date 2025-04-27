@@ -1,2 +1,18 @@
-# dependencies
-node_modules/
+# OS
+**/.DS_Store
+
+# Dependencies
+**/node_modules/
+
+# Build files
+**/dist/
+
+# Environment
+**/.env
+**/.env*.local
+
+# Turbo
+**/.turbo/
+
+# Logging
+**/*.log

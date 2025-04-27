@@ -1,27 +1,27 @@
 import {
   assertSucceeds,
   initializeTestEnvironment,
-  RulesTestContext,
-  RulesTestEnvironment,
-} from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, setLogLevel } from "firebase/firestore";
-import fs from "node:fs";
-import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+  type RulesTestContext,
+  type RulesTestEnvironment,
+} from '@firebase/rules-unit-testing';
+import { doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore';
+import fs from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
-setLogLevel("silent");
+setLogLevel('silent');
 
-const USER_ID = "USER_ID";
+const USER_ID = 'USER_ID';
 
 const testUser = {
-  username: "booga",
+  username: 'booga',
   private: true,
 };
 
 const userDocPath = (userId: string) => `users/${userId}`;
 const usernameDocPath = (username: string) => `usernames/${username}`;
 
-describe("user rules", () => {
+describe('user rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
@@ -29,13 +29,13 @@ describe("user rules", () => {
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
-      projectId: "intentions-test",
+      projectId: 'intentions-test',
       firestore: {
         rules: fs.readFileSync(
-          path.join(__dirname, "../firestore.rules"),
-          "utf8",
+          path.join(__dirname, '../firestore.rules'),
+          'utf8',
         ),
-        host: "127.0.0.1",
+        host: '127.0.0.1',
         port: 8080,
       },
     });
@@ -52,7 +52,7 @@ describe("user rules", () => {
     await testEnv.cleanup();
   });
 
-  describe("read", () => {
+  describe('read', () => {
     beforeEach(async () => {
       await testEnv.withSecurityRulesDisabled(async (context) => {
         const db = context.firestore();
@@ -65,7 +65,7 @@ describe("user rules", () => {
       });
     });
 
-    it("should allow reading users and usernames", async () => {
+    it('should allow reading users and usernames', async () => {
       const db = unauthContext.firestore();
 
       const userDoc = doc(db, userDocPath(USER_ID));

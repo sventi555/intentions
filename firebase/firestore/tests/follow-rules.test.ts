@@ -2,39 +2,39 @@ import {
   assertFails,
   assertSucceeds,
   initializeTestEnvironment,
-  RulesTestContext,
-  RulesTestEnvironment,
-} from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, setLogLevel } from "firebase/firestore";
-import fs from "node:fs";
-import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+  type RulesTestContext,
+  type RulesTestEnvironment,
+} from '@firebase/rules-unit-testing';
+import { doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore';
+import fs from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
-setLogLevel("silent");
+setLogLevel('silent');
 
 const USER_IDS = {
-  authUser: "authUser",
-  privateUser: "privateUser",
-  otherPrivateUser: "otherPrivateUser",
-  publicUser: "publicUser",
-  otherPublicUser: "otherPublicUser",
+  authUser: 'authUser',
+  privateUser: 'privateUser',
+  otherPrivateUser: 'otherPrivateUser',
+  publicUser: 'publicUser',
+  otherPublicUser: 'otherPublicUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: "booga", private: true },
-  [USER_IDS.privateUser]: { username: "private-user", private: true },
+  [USER_IDS.authUser]: { username: 'booga', private: true },
+  [USER_IDS.privateUser]: { username: 'private-user', private: true },
   [USER_IDS.otherPrivateUser]: {
-    username: "other-private-user",
+    username: 'other-private-user',
     private: true,
   },
-  [USER_IDS.publicUser]: { username: "public-user", private: false },
+  [USER_IDS.publicUser]: { username: 'public-user', private: false },
   [USER_IDS.otherPublicUser]: {
-    username: "other-public-user",
+    username: 'other-public-user',
     private: false,
   },
 };
 
-const STATUS = { accepted: "accepted", pending: "pending" };
+const STATUS = { accepted: 'accepted', pending: 'pending' };
 
 const followDocPath = (fromId: string, toId: string) =>
   `follows/${toId}/from/${fromId}`;
@@ -51,7 +51,7 @@ const addFollowWithoutRules = async (
   });
 };
 
-describe("follow rules", () => {
+describe('follow rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
@@ -59,13 +59,13 @@ describe("follow rules", () => {
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
-      projectId: "intentions-test",
+      projectId: 'intentions-test',
       firestore: {
         rules: fs.readFileSync(
-          path.join(__dirname, "../firestore.rules"),
-          "utf8",
+          path.join(__dirname, '../firestore.rules'),
+          'utf8',
         ),
-        host: "127.0.0.1",
+        host: '127.0.0.1',
         port: 8080,
       },
     });
@@ -80,7 +80,7 @@ describe("follow rules", () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
-        const userDoc = doc(db, "users", userId);
+        const userDoc = doc(db, 'users', userId);
         await setDoc(userDoc, testUsers[userId]);
       }
     });
@@ -90,7 +90,7 @@ describe("follow rules", () => {
     await testEnv.cleanup();
   });
 
-  describe("read", () => {
+  describe('read', () => {
     // ALLOWED
     describe.each([
       {
@@ -128,12 +128,12 @@ describe("follow rules", () => {
         to: USER_IDS.authUser,
         status: STATUS.accepted,
       },
-    ])("includes requester: follow %o", ({ from, to, status }) => {
+    ])('includes requester: follow %o', ({ from, to, status }) => {
       beforeEach(async () => {
         await addFollowWithoutRules(testEnv, { from, to, status });
       });
 
-      it("should allow reading", async () => {
+      it('should allow reading', async () => {
         const db = authContext.firestore();
 
         const followDoc = doc(db, followDocPath(from, to));
@@ -158,13 +158,13 @@ describe("follow rules", () => {
         status: STATUS.accepted,
       },
     ])(
-      "includes someone public and is accepted: follow %o",
+      'includes someone public and is accepted: follow %o',
       ({ from, to, status }) => {
         beforeEach(async ({}) => {
           await addFollowWithoutRules(testEnv, { from, to, status });
         });
 
-        it("should allow reading", async () => {
+        it('should allow reading', async () => {
           const db = authContext.firestore();
 
           const followDoc = doc(db, followDocPath(from, to));
@@ -196,7 +196,7 @@ describe("follow rules", () => {
           });
         });
 
-        it("should allow reading", async () => {
+        it('should allow reading', async () => {
           const db = authContext.firestore();
 
           const followDoc = doc(db, followDocPath(from, to));
@@ -229,7 +229,7 @@ describe("follow rules", () => {
           });
         });
 
-        it("should not allow reading", async () => {
+        it('should not allow reading', async () => {
           const db = authContext.firestore();
 
           const followDoc = doc(db, followDocPath(from, to));
@@ -250,13 +250,13 @@ describe("follow rules", () => {
         status: STATUS.pending,
       },
     ])(
-      "is pending and does not include requester: follow %o",
+      'is pending and does not include requester: follow %o',
       ({ from, to, status }) => {
         beforeEach(async ({}) => {
           await addFollowWithoutRules(testEnv, { from, to, status });
         });
 
-        it("should not allow reading", async () => {
+        it('should not allow reading', async () => {
           const db = authContext.firestore();
 
           const followDoc = doc(db, followDocPath(from, to));
@@ -265,7 +265,7 @@ describe("follow rules", () => {
       },
     );
 
-    describe("includes only private non-friends", () => {
+    describe('includes only private non-friends', () => {
       const { from, to, status } = {
         from: USER_IDS.privateUser,
         to: USER_IDS.otherPrivateUser,
@@ -276,7 +276,7 @@ describe("follow rules", () => {
         await addFollowWithoutRules(testEnv, { from, to, status });
       });
 
-      it("should not allow reading", async () => {
+      it('should not allow reading', async () => {
         const db = authContext.firestore();
 
         const followDoc = doc(db, followDocPath(from, to));

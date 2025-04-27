@@ -2,9 +2,9 @@ import {
   assertFails,
   assertSucceeds,
   initializeTestEnvironment,
-  RulesTestContext,
-  RulesTestEnvironment,
-} from "@firebase/rules-unit-testing";
+  type RulesTestContext,
+  type RulesTestEnvironment,
+} from '@firebase/rules-unit-testing';
 import {
   addDoc,
   collection,
@@ -12,21 +12,21 @@ import {
   getDoc,
   setDoc,
   setLogLevel,
-} from "firebase/firestore";
-import fs from "node:fs";
-import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+} from 'firebase/firestore';
+import fs from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
-setLogLevel("silent");
+setLogLevel('silent');
 
 const USER_IDS = {
-  authUser: "authUser",
-  publicUser: "publicUser",
+  authUser: 'authUser',
+  publicUser: 'publicUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: "auth-user", private: true },
-  [USER_IDS.publicUser]: { username: "public-user", private: false },
+  [USER_IDS.authUser]: { username: 'auth-user', private: true },
+  [USER_IDS.publicUser]: { username: 'public-user', private: false },
 };
 
 const feedPostDocPath = (userId: string, postId: string) =>
@@ -36,7 +36,7 @@ const addFeedPostWithoutRules = async (
   testEnv: RulesTestEnvironment,
   post: { userId: string },
 ) => {
-  let feedPostId: string = "";
+  let feedPostId: string = '';
 
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
@@ -51,7 +51,7 @@ const addFeedPostWithoutRules = async (
   return feedPostId;
 };
 
-describe("feed rules", () => {
+describe('feed rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
@@ -59,13 +59,13 @@ describe("feed rules", () => {
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
-      projectId: "intentions-test",
+      projectId: 'intentions-test',
       firestore: {
         rules: fs.readFileSync(
-          path.join(__dirname, "../firestore.rules"),
-          "utf8",
+          path.join(__dirname, '../firestore.rules'),
+          'utf8',
         ),
-        host: "127.0.0.1",
+        host: '127.0.0.1',
         port: 8080,
       },
     });
@@ -80,7 +80,7 @@ describe("feed rules", () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
       for (const userId in testUsers) {
-        const userDoc = doc(db, "users", userId);
+        const userDoc = doc(db, 'users', userId);
         await setDoc(userDoc, testUsers[userId]);
       }
     });
@@ -90,9 +90,9 @@ describe("feed rules", () => {
     await testEnv.cleanup();
   });
 
-  describe("read", () => {
-    describe("when the requester owns the feed", () => {
-      let postId: string = "";
+  describe('read', () => {
+    describe('when the requester owns the feed', () => {
+      let postId: string = '';
 
       beforeEach(async () => {
         postId = await addFeedPostWithoutRules(testEnv, {
@@ -100,7 +100,7 @@ describe("feed rules", () => {
         });
       });
 
-      it("should allow reading", async () => {
+      it('should allow reading', async () => {
         const db = authContext.firestore();
 
         const feedPostDoc = doc(db, feedPostDocPath(USER_IDS.authUser, postId));
@@ -108,8 +108,8 @@ describe("feed rules", () => {
       });
     });
 
-    describe("when requester is not the owner", () => {
-      let postId: string = "";
+    describe('when requester is not the owner', () => {
+      let postId: string = '';
       const postUser = USER_IDS.publicUser;
 
       beforeEach(async () => {
@@ -118,14 +118,14 @@ describe("feed rules", () => {
         });
       });
 
-      it("should not allow reading as unauthenticated", async () => {
+      it('should not allow reading as unauthenticated', async () => {
         const db = unauthContext.firestore();
 
         const feedPostDoc = doc(db, feedPostDocPath(postUser, postId));
         await assertFails(getDoc(feedPostDoc));
       });
 
-      it("should not allow reading as non-owner user", async () => {
+      it('should not allow reading as non-owner user', async () => {
         const db = authContext.firestore();
 
         const feedPostDoc = doc(db, feedPostDocPath(postUser, postId));
