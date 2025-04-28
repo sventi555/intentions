@@ -2,9 +2,11 @@
   "name": "scripts",
   "type": "module",
   "scripts": {
-    "auth-token": "FIREBASE_PROJECT_ID=demo-intentions FIRESTORE_EMULATOR_HOST=\"127.0.0.1:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"127.0.0.1:9099\" node get-auth-token"
+    "auth-token": "FIREBASE_PROJECT_ID=demo-intentions FIRESTORE_EMULATOR_HOST=\"127.0.0.1:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"127.0.0.1:9099\" node get-auth-token",
+    "format": "prettier --check ."
   },
   "devDependencies": {
-    "firebase-admin": "^12.6.0"
+    "firebase-admin": "12.6.0",
+    "prettier": "3.3.3"
   }
 }
