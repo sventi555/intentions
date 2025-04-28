@@ -1,1 +1,2 @@
-- search users and send/accept follows on UI
+- user profile page (own profile, and search page stack page for searched users)
+- set email field to be private

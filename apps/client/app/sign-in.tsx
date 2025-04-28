@@ -20,15 +20,11 @@ const SignIn = () => {
 
   return (
     <PageWrapper>
-      <TextInput
-        placeholder="email"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
-      />
+      <TextInput placeholder="email" value={email} onChangeText={setEmail} />
       <TextInput
         placeholder="password"
         value={pass}
-        onChangeText={(text) => setPass(text)}
+        onChangeText={setPass}
         onSubmitEditing={signIn}
       />
       <Button title="login" onPress={signIn} />

@@ -57,22 +57,18 @@ const SignUp = () => {
         <TextInput
           placeholder="username"
           value={username}
-          onChangeText={(text) => setUsername(text)}
+          onChangeText={setUsername}
         />
-        <TextInput
-          placeholder="email"
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-        />
+        <TextInput placeholder="email" value={email} onChangeText={setEmail} />
         <TextInput
           placeholder="password"
           value={password}
-          onChangeText={(text) => setPassword(text)}
+          onChangeText={setPassword}
         />
         <TextInput
           placeholder="repeat password"
           value={passRepeat}
-          onChangeText={(text) => setPassRepeat(text)}
+          onChangeText={setPassRepeat}
           onSubmitEditing={onCreateUser}
         />
         <Button title="create" onPress={onCreateUser} />

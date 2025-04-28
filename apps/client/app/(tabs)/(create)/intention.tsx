@@ -43,7 +43,7 @@ const CreateIntention = () => {
         <TextInput
           placeholder="Write an intention"
           value={intention}
-          onChangeText={(val) => setIntention(val)}
+          onChangeText={setIntention}
         />
         <Button
           title="Create"
