@@ -76,7 +76,10 @@ const CreatePost = () => {
       ...(image ? { image } : {}),
     });
 
-    await queryClient.invalidateQueries({ queryKey: ['feed', user?.uid] });
+    queryClient.invalidateQueries({ queryKey: ['feed', user?.uid] });
+    queryClient.invalidateQueries({
+      queryKey: ['user-posts', user?.uid],
+    });
     resetState();
 
     router.back();

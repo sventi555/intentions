@@ -30,7 +30,7 @@ const CreateIntention = () => {
   const onCreateIntention = async () => {
     await createIntention({ name: intention });
 
-    await queryClient.invalidateQueries({
+    queryClient.invalidateQueries({
       queryKey: ['intentions', user?.uid],
     });
 

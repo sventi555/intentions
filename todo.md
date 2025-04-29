@@ -1,2 +1,2 @@
-- user profile page (own profile, and search page stack page for searched users)
+- user profile page (search page stack page for searched users)
 - set email field to be private
