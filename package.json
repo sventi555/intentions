@@ -9,7 +9,7 @@
     "check-types": "turbo check-types",
     "build": "turbo check-types build",
     "start": "turbo start",
-    "lint": "turbo format lint",
+    "format": "turbo format",
     "emulators": "cd firebase && firebase emulators:start",
     "prepare": "husky"
   },

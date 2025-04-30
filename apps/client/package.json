@@ -6,7 +6,6 @@
     "dev": "expo start",
     "build": "expo export",
     "start": "expo serve",
-    "lint": "expo lint",
     "format": "prettier --check ."
   },
   "dependencies": {
@@ -47,8 +46,6 @@
     "@types/react": "18.3.12",
     "@types/react-test-renderer": "18.3.0",
     "concurrently": "9.1.2",
-    "eslint": "8.57.0",
-    "eslint-config-expo": "8.0.1",
     "firebase": "11.5.0",
     "prettier": "3.3.3",
     "react-test-renderer": "18.3.1",
