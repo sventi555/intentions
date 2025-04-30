@@ -5,7 +5,7 @@ import { getDownloadURL, ref } from 'firebase/storage';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
-interface PostProps {
+export interface PostProps {
   userId: string;
   user: {
     username: string;

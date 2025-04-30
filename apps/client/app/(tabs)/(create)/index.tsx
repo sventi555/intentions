@@ -1,4 +1,3 @@
-import { PageWrapper } from '@/components/page-wrapper';
 import { useUserIntentions } from '@/hooks/intentions';
 import { useCreatePost } from '@/hooks/posts';
 import { useUser } from '@/hooks/user';
@@ -61,35 +60,33 @@ const CreatePost = () => {
   const valid = selectedIntentionId && (image || description);
 
   return (
-    <PageWrapper>
-      <View style={{ gap: 8 }}>
-        <Picker
-          onValueChange={(val) => setIntentionId(val)}
-          selectedValue={intentionId}
-        >
-          {intentions?.map((intention) => (
-            <Picker.Item
-              key={intention.id}
-              label={intention.data().name}
-              value={intention.id}
-            />
-          ))}
-        </Picker>
-        <Link href="/(tabs)/(create)/intention">+ Create intention</Link>
-        <Button title="upload image" onPress={pickImage} />
-        {image && (
-          <Image source={image} style={{ width: '100%', aspectRatio: 1 }} />
-        )}
-        <TextInput
-          placeholder="Add a description"
-          multiline
-          style={{ borderWidth: 1, height: 60 }}
-          onChangeText={setDescription}
-          value={description}
-        />
-        <Button title="post" disabled={!valid} onPress={onSubmit} />
-      </View>
-    </PageWrapper>
+    <View style={{ gap: 8 }}>
+      <Picker
+        onValueChange={(val) => setIntentionId(val)}
+        selectedValue={intentionId}
+      >
+        {intentions?.map((intention) => (
+          <Picker.Item
+            key={intention.id}
+            label={intention.data().name}
+            value={intention.id}
+          />
+        ))}
+      </Picker>
+      <Link href="/(tabs)/(create)/intention">+ Create intention</Link>
+      <Button title="upload image" onPress={pickImage} />
+      {image && (
+        <Image source={image} style={{ width: '100%', aspectRatio: 1 }} />
+      )}
+      <TextInput
+        placeholder="Add a description"
+        multiline
+        style={{ borderWidth: 1, height: 60 }}
+        onChangeText={setDescription}
+        value={description}
+      />
+      <Button title="post" disabled={!valid} onPress={onSubmit} />
+    </View>
   );
 };
 

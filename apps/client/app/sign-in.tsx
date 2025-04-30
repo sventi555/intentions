@@ -1,9 +1,8 @@
-import { PageWrapper } from '@/components/page-wrapper';
 import { auth } from '@/config/firebase';
 import { Link, useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
-import { Button, Text, TextInput } from 'react-native';
+import { Button, Text, TextInput, View } from 'react-native';
 
 const SignIn = () => {
   const router = useRouter();
@@ -19,7 +18,7 @@ const SignIn = () => {
       .catch((err) => setErrMsg(err.message));
 
   return (
-    <PageWrapper>
+    <View>
       <TextInput placeholder="email" value={email} onChangeText={setEmail} />
       <TextInput
         placeholder="password"
@@ -30,7 +29,7 @@ const SignIn = () => {
       <Button title="login" onPress={signIn} />
       {errMsg ? <Text style={{ color: 'red' }}>{errMsg}</Text> : null}
       <Link href="/sign-up">Create account</Link>
-    </PageWrapper>
+    </View>
   );
 };
 

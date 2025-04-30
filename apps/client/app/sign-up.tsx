@@ -1,4 +1,3 @@
-import { PageWrapper } from '@/components/page-wrapper';
 import { auth } from '@/config/firebase';
 import { CreateUserBody } from '@lib';
 import { useMutation } from '@tanstack/react-query';
@@ -48,34 +47,32 @@ const SignUp = () => {
   };
 
   return (
-    <PageWrapper>
-      <View>
-        <View style={{ flexDirection: 'row', gap: 4 }}>
-          <Text>Private account:</Text>
-          <Switch value={isPrivate} onValueChange={setIsPrivate} />
-        </View>
-        <TextInput
-          placeholder="username"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput placeholder="email" value={email} onChangeText={setEmail} />
-        <TextInput
-          placeholder="password"
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TextInput
-          placeholder="repeat password"
-          value={passRepeat}
-          onChangeText={setPassRepeat}
-          onSubmitEditing={onCreateUser}
-        />
-        <Button title="create" onPress={onCreateUser} />
-        {errMsg ? <Text style={{ color: 'red' }}>{errMsg}</Text> : null}
-        <Link href="/sign-in">Sign in</Link>
+    <View>
+      <View style={{ flexDirection: 'row', gap: 4 }}>
+        <Text>Private account:</Text>
+        <Switch value={isPrivate} onValueChange={setIsPrivate} />
       </View>
-    </PageWrapper>
+      <TextInput
+        placeholder="username"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput placeholder="email" value={email} onChangeText={setEmail} />
+      <TextInput
+        placeholder="password"
+        value={password}
+        onChangeText={setPassword}
+      />
+      <TextInput
+        placeholder="repeat password"
+        value={passRepeat}
+        onChangeText={setPassRepeat}
+        onSubmitEditing={onCreateUser}
+      />
+      <Button title="create" onPress={onCreateUser} />
+      {errMsg ? <Text style={{ color: 'red' }}>{errMsg}</Text> : null}
+      <Link href="/sign-in">Sign in</Link>
+    </View>
   );
 };
 
