@@ -1,35 +1,23 @@
 import { PageWrapper } from '@/components/page-wrapper';
-import { db } from '@/config/firebase';
+import { useUserIntentions } from '@/hooks/intentions';
+import { useCreatePost } from '@/hooks/posts';
 import { useUser } from '@/hooks/user';
-import { CreatePostBody } from '@lib';
 import { Picker } from '@react-native-picker/picker';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, useRouter } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useState } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
 const CreatePost = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const user = useUser();
 
   const [intentionId, setIntentionId] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
 
-  const { data: intentions } = useQuery({
-    queryKey: ['intentions', user?.uid],
-    queryFn: async () => {
-      return (
-        await getDocs(
-          query(collection(db, 'intentions'), where('userId', '==', user?.uid)),
-        )
-      ).docs;
-    },
-  });
+  const { intentions } = useUserIntentions(user?.uid);
   const selectedIntentionId = intentionId || intentions?.[0]?.id;
 
   const pickImage = async () => {
@@ -51,17 +39,10 @@ const CreatePost = () => {
     setIntentionId('');
   };
 
-  const { mutateAsync: addPost } = useMutation({
-    mutationFn: async (vars: CreatePostBody) => {
-      const idToken = await user?.getIdToken();
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/posts`, {
-        method: 'POST',
-        headers: {
-          Authorization: idToken ?? '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(vars),
-      });
+  const createPost = useCreatePost({
+    onSuccess: () => {
+      resetState();
+      router.back();
     },
   });
 
@@ -70,19 +51,11 @@ const CreatePost = () => {
       return;
     }
 
-    await addPost({
+    await createPost({
       intentionId: selectedIntentionId,
       description,
       ...(image ? { image } : {}),
     });
-
-    queryClient.invalidateQueries({ queryKey: ['feed', user?.uid] });
-    queryClient.invalidateQueries({
-      queryKey: ['user-posts', user?.uid],
-    });
-    resetState();
-
-    router.back();
   };
 
   const valid = selectedIntentionId && (image || description);

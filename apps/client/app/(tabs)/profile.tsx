@@ -1,27 +1,11 @@
-import { db } from '@/config/firebase';
+import { useUserPosts } from '@/hooks/posts';
 import { useUser } from '@/hooks/user';
-import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { FlatList, Text, View } from 'react-native';
 
 const Profile = () => {
   // Change this eventually. Only good for current user profile
   const user = useUser();
-
-  const { data: posts } = useQuery({
-    queryKey: ['user-posts', user?.uid],
-    queryFn: async () => {
-      return (
-        await getDocs(
-          query(
-            collection(db, 'posts'),
-            where('userId', '==', user?.uid),
-            orderBy('createdAt', 'desc'),
-          ),
-        )
-      ).docs;
-    },
-  });
+  const { posts } = useUserPosts(user?.uid);
 
   const groupedPosts = posts?.reduce<(typeof posts)[]>((acc, post) => {
     if (acc.length === 0 || acc.at(-1)?.length === 3) {

@@ -1,35 +1,22 @@
 import { PageWrapper } from '@/components/page-wrapper';
 import { Post } from '@/components/post';
-import { auth, db } from '@/config/firebase';
+import { auth } from '@/config/firebase';
+import { useFeedPosts } from '@/hooks/posts';
 import { useUser } from '@/hooks/user';
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { ScrollView, Text, View } from 'react-native';
 
 const Feed = () => {
   const user = useUser();
-
-  const { data: feedPosts } = useQuery({
-    queryKey: ['feed', user?.uid],
-    queryFn: async () => {
-      const feedPostsQuery = query(
-        collection(db, `/users/${user?.uid}/feed`),
-        orderBy('createdAt', 'desc'),
-        limit(10),
-      );
-
-      return (await getDocs(feedPostsQuery)).docs;
-    },
-  });
+  const { posts } = useFeedPosts();
 
   return (
     <View style={{ flex: 1, position: 'relative' }}>
       <ScrollView>
         <PageWrapper>
           <View style={{ gap: 8 }}>
-            {feedPosts?.map((post) => {
+            {posts?.map((post) => {
               return <Post key={post.id} {...(post.data() as any)} />;
             })}
           </View>
