@@ -1,6 +1,6 @@
-- user profile page
-    - accessible from search
-    - accessible from feed
-- load actual images on profile page (you could just do a column view for now, same as feed - reuse post component)
+- follows (accepting/declining requests)
+
+- deduplicate db doc/collection paths
+- interfaces for db collections
 
 - set email field to be private

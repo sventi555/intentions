@@ -2,7 +2,7 @@ import { db } from '@/config/firebase';
 import { CreateIntentionBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { useUser } from './user';
+import { useAuthUser } from './user';
 
 const userIntentionsQueryKey = (userId: string | undefined) => [
   'intentions',
@@ -33,7 +33,7 @@ export const useCreateIntention = ({
 }: {
   onSuccess: () => void;
 }) => {
-  const user = useUser();
+  const user = useAuthUser();
   const queryClient = useQueryClient();
 
   const { mutateAsync: createIntention } = useMutation({

@@ -1,6 +1,8 @@
 import { storage } from '@/config/firebase';
+import { useProfilePath } from '@/hooks/navigation';
 import { dayjs } from '@/utils/time';
 import { Image } from 'expo-image';
+import { Link } from 'expo-router';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -21,6 +23,7 @@ export interface PostProps {
 
 export const Post: React.FC<PostProps> = (props) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const profilePath = useProfilePath(props.userId);
 
   useEffect(() => {
     if (props.image) {
@@ -34,7 +37,11 @@ export const Post: React.FC<PostProps> = (props) => {
     <View style={{ borderRadius: 8, borderWidth: 1, padding: 8, gap: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Text>DP</Text>
-        <Text>{props.user.username}</Text>
+        {profilePath ? (
+          <Link href={profilePath}>{props.user.username}</Link>
+        ) : (
+          <Text>{props.user.username}</Text>
+        )}
         <Text style={{ color: 'grey' }}>
           {dayjs(props.createdAt).fromNow()}
         </Text>

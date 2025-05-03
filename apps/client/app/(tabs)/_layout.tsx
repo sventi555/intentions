@@ -1,15 +1,27 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 
+export const unstable_settings = {
+  initialRouteName: '(feed)/index',
+};
+
 export default function TabLayout() {
   return (
     <Tabs
+      screenListeners={({ navigation, route }) => ({
+        // go back to root of tab on click when focused
+        tabPress: () => {
+          if (navigation.isFocused()) {
+            navigation.navigate(route.name);
+          }
+        },
+      })}
       screenOptions={{
         tabBarActiveTintColor: 'blue',
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="(feed)"
         options={{
           title: 'Feed',
           tabBarIcon: ({ color }) => (
@@ -18,7 +30,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="(search)"
         options={{
           title: 'Search',
           tabBarIcon: ({ color }) => (

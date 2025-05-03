@@ -1,6 +1,6 @@
 import { useUserIntentions } from '@/hooks/intentions';
 import { useCreatePost } from '@/hooks/posts';
-import { useUser } from '@/hooks/user';
+import { useAuthUser } from '@/hooks/user';
 import { Picker } from '@react-native-picker/picker';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +10,7 @@ import { Button, TextInput, View } from 'react-native';
 
 const CreatePost = () => {
   const router = useRouter();
-  const user = useUser();
+  const user = useAuthUser();
 
   const [intentionId, setIntentionId] = useState('');
   const [description, setDescription] = useState('');

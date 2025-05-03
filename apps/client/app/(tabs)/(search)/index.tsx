@@ -1,8 +1,9 @@
 import { db } from '@/config/firebase';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'expo-router';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useState } from 'react';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { FlatList, TextInput, View } from 'react-native';
 import { useDebounce } from 'use-debounce';
 
 const Search = () => {
@@ -32,7 +33,16 @@ const Search = () => {
       />
       <FlatList
         data={userResults}
-        renderItem={({ item }) => <Text>{item.data().username}</Text>}
+        renderItem={({ item }) => (
+          <Link
+            href={{
+              pathname: '/(tabs)/(search)/[userId]',
+              params: { userId: item.id },
+            }}
+          >
+            {item.data().username}
+          </Link>
+        )}
         keyExtractor={(item) => item.id}
       />
     </View>

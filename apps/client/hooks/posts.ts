@@ -9,11 +9,11 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { useUser } from './user';
+import { useAuthUser } from './user';
 
 const feedPostsQueryKey = (userId: string | undefined) => ['feed', userId];
 export const useFeedPosts = () => {
-  const user = useUser();
+  const user = useAuthUser();
 
   const {
     data: posts,
@@ -64,7 +64,7 @@ export const useUserPosts = (userId: string | undefined) => {
 };
 
 export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
-  const user = useUser();
+  const user = useAuthUser();
   const queryClient = useQueryClient();
 
   const { mutateAsync: createPost } = useMutation({
