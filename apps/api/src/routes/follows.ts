@@ -4,9 +4,10 @@ import { HTTPException } from 'hono/http-exception';
 import {
   removeFollowBody,
   respondToFollowBody,
+  type Follow,
   type FollowUserResponse,
 } from 'lib';
-import { db } from '../config';
+import { bulkWriter, collections } from '../db';
 import { authenticate } from '../middleware/auth';
 
 const app = new Hono();
@@ -21,30 +22,30 @@ app.post('/:userId', authenticate, async (c) => {
   }
 
   // check for pre-existing follow
-  const followDoc = db.doc(`follows/${followedUserId}/from/${requesterId}`);
+  const followDoc = collections.follows(followedUserId).doc(requesterId);
   const followDocResource = await followDoc.get();
   if (followDocResource.exists) {
     return;
   }
 
   // get recipient privacy
-  const recipient = await db.doc(`users/${followedUserId}`).get();
+  const recipient = await collections.users().doc(followedUserId).get();
   if (!recipient.exists) {
     throw new HTTPException(404, { message: 'User does not exist.' });
   }
   const isPrivate = recipient.data()?.private;
 
   // get requester info for embedding in follow
-  const requester = (await db.doc(`users/${requesterId}`).get()).data();
+  const requester = (await collections.users().doc(requesterId).get()).data();
   if (!requester) {
     throw new HTTPException(500, { message: 'Requester data is missing' });
   }
   const { username } = requester;
 
-  const writeBatch = db.bulkWriter();
+  const writeBatch = bulkWriter();
 
   // create follow
-  const followData = {
+  const followData: Follow = {
     status: isPrivate ? 'pending' : 'accepted',
     fromUser: { username },
     createdAt: Date.now(),
@@ -53,20 +54,20 @@ app.post('/:userId', authenticate, async (c) => {
 
   // if status is immediately accepted (recipient is public), update feed
   if (!isPrivate) {
-    const followedPosts = await db
-      .collection('posts')
+    const followedPosts = await collections
+      .posts()
       .where('userId', '==', followedUserId)
       .get();
 
     followedPosts.forEach((post) => {
-      const feedPostDoc = db.doc(`users/${requesterId}/feed/${post.id}`);
+      const feedPostDoc = collections.feed(requesterId).doc(post.id);
       writeBatch.create(feedPostDoc, post.data());
     });
   }
 
   await writeBatch.close();
 
-  return c.json<FollowUserResponse>(followData, 201);
+  return c.json<FollowUserResponse>({ status: followData.status }, 201);
 });
 
 app.post(
@@ -78,7 +79,7 @@ app.post(
     const fromUserId = c.req.param('userId');
     const { action } = c.req.valid('json');
 
-    const followDoc = db.doc(`follows/${requesterId}/from/${fromUserId}`);
+    const followDoc = collections.follows(requesterId).doc(fromUserId);
     const followData = (await followDoc.get()).data();
     if (!followData) {
       throw new HTTPException(404, {
@@ -98,18 +99,18 @@ app.post(
       return c.body(null, 200);
     }
 
-    const writeBatch = db.bulkWriter();
+    const writeBatch = bulkWriter();
 
     if (action === 'accept') {
       writeBatch.update(followDoc, { status: 'accepted' });
 
-      const followedPosts = await db
-        .collection('posts')
+      const followedPosts = await collections
+        .posts()
         .where('userId', '==', requesterId)
         .get();
 
       followedPosts.forEach((post) => {
-        const feedPostDoc = db.doc(`users/${fromUserId}/feed/${post.id}`);
+        const feedPostDoc = collections.feed(fromUserId).doc(post.id);
         writeBatch.create(feedPostDoc, post.data());
       });
     } else {
@@ -134,14 +135,14 @@ app.delete(
     const fromUserId = direction === 'from' ? userId : requesterId;
     const toUserId = direction === 'from' ? requesterId : userId;
 
-    const followDoc = db.doc(`follows/${toUserId}/from/${fromUserId}`);
+    const followDoc = collections.follows(toUserId).doc(fromUserId);
 
-    const writeBatch = db.bulkWriter();
+    const writeBatch = bulkWriter();
 
     writeBatch.delete(followDoc);
 
-    const followedPosts = await db
-      .collection(`users/${fromUserId}/feed`)
+    const followedPosts = await collections
+      .feed(fromUserId)
       .where('userId', '==', toUserId)
       .get();
 

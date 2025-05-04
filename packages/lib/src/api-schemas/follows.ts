@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import type { Follow } from '../db-models';
 
-export type FollowUserResponse = { status: 'accepted' | 'pending' };
+export type FollowUserResponse = Pick<Follow, 'status'>;
 
 export const respondToFollowBody = z.object({
   action: z.enum(['accept', 'decline']),

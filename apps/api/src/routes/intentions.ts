@@ -2,7 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createIntentionBody } from 'lib';
-import { db } from '../config';
+import { collections } from '../db';
 import { authenticate } from '../middleware/auth';
 
 const app = new Hono();
@@ -17,8 +17,8 @@ app.post(
 
     const existingIntention =
       (
-        await db
-          .collection('intentions')
+        await collections
+          .intentions()
           .where('userId', '==', requesterId)
           .where('name', '==', name)
           .get()
@@ -31,7 +31,7 @@ app.post(
     }
 
     const intentionData = { userId: requesterId, name, createdAt: Date.now() };
-    await db.collection('intentions').add(intentionData);
+    await collections.intentions().add(intentionData);
 
     return c.body(null, 201);
   },
