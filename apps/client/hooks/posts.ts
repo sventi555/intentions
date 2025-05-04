@@ -36,10 +36,7 @@ export const useFeedPosts = () => {
   return { posts, isLoading, isError };
 };
 
-const userPostsQueryKey = (userId: string | undefined) => [
-  'user-posts',
-  userId,
-];
+const userPostsQueryKey = (userId: string | undefined) => ['posts', userId];
 export const useUserPosts = (userId: string | undefined) => {
   const {
     data: posts,

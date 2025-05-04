@@ -1,59 +1,38 @@
 import { Post, PostProps } from '@/components/post';
-import { db } from '@/config/firebase';
+import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
 import { useUserPosts } from '@/hooks/posts';
 import { useAuthUser, useUser } from '@/hooks/user';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { doc, getDoc } from 'firebase/firestore';
 import { Button, FlatList, Text, View } from 'react-native';
 
 interface ProfileProps {
-  userId: string | undefined;
+  userId: string;
 }
 
 const Profile: React.FC<ProfileProps> = ({ userId }) => {
-  const { posts } = useUserPosts(userId);
-  const { user } = useUser(userId);
   const authUser = useAuthUser();
-  const queryClient = useQueryClient();
+  const { user } = useUser(userId);
+  const { posts } = useUserPosts(userId);
+  const { follow } = useFollow({ from: authUser?.uid, to: userId });
 
-  const { data: follow } = useQuery({
-    enabled: !!authUser,
-    queryKey: ['follow', `from-${authUser?.uid}`, `to-${userId}`],
-    queryFn: async () => {
-      const follow = await getDoc(
-        doc(db, `follows/${userId}/from/${authUser?.uid}`),
-      );
-      return follow.data();
-    },
-  });
-
-  const { mutateAsync: followUser } = useMutation({
-    mutationFn: async () => {
-      const idToken = await authUser?.getIdToken();
-      fetch(`${process.env.EXPO_PUBLIC_API_HOST}/follows/${userId}`, {
-        method: 'POST',
-        headers: { Authorization: idToken ?? '' },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['follow', `from-${authUser?.uid}`, `to-${userId}`],
-      });
-    },
-  });
-
-  const { mutateAsync: unfollowUser } = useMutation({});
+  const followUser = useFollowUser(userId);
+  const removeFollow = useRemoveFollow();
+  const unfollowUser = () =>
+    removeFollow({ userId, data: { direction: 'to' } });
 
   return (
     <View style={{ flex: 1 }}>
       <Text>{user?.username}</Text>
       {authUser?.uid === userId ? null : (
         <View>
-          <Button
-            title={followButtonText(follow)}
-            onPress={() => (follow ? unfollowUser() : followUser())}
-            color={follow ? 'gray' : undefined}
-          />
+          {follow ? (
+            <Button
+              title={follow.status === 'pending' ? 'Pending' : 'Unfollow'}
+              onPress={() => unfollowUser()}
+              color="gray"
+            />
+          ) : (
+            <Button title={'Follow'} onPress={() => followUser()} />
+          )}
         </View>
       )}
       {posts && (
@@ -67,15 +46,3 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
 };
 
 export default Profile;
-
-const followButtonText = (followData: any | undefined) => {
-  if (!followData) {
-    return 'Follow';
-  }
-
-  if (followData.status === 'pending') {
-    return 'Pending';
-  }
-
-  return 'Following';
-};

@@ -34,11 +34,20 @@ app.post('/:userId', authenticate, async (c) => {
   }
   const isPrivate = recipient.data()?.private;
 
+  // get requester info for embedding in follow
+  const requester = (await db.doc(`users/${requesterId}`).get()).data();
+  if (!requester) {
+    throw new HTTPException(500, { message: 'Requester data is missing' });
+  }
+  const { username } = requester;
+
   const writeBatch = db.bulkWriter();
 
   // create follow
   const followData = {
     status: isPrivate ? 'pending' : 'accepted',
+    fromUser: { username },
+    createdAt: Date.now(),
   } as const;
   writeBatch.create(followDoc, followData);
 
@@ -86,7 +95,7 @@ app.post(
         });
       }
 
-      return;
+      return c.body(null, 200);
     }
 
     const writeBatch = db.bulkWriter();
