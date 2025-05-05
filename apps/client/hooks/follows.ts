@@ -1,15 +1,7 @@
-import { db } from '@/config/firebase';
+import { collections, docs } from '@/db';
 import { RemoveFollowBody, RespondToFollowBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-} from 'firebase/firestore';
+import { getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { useAuthUser } from './user';
 
 export const useFollowsToUser = (userId: string | undefined) => {
@@ -24,7 +16,7 @@ export const useFollowsToUser = (userId: string | undefined) => {
       return (
         await getDocs(
           query(
-            collection(db, `follows/${userId}/from`),
+            collections.follows(userId!),
             orderBy('createdAt', 'desc'),
             limit(10),
           ),
@@ -51,7 +43,7 @@ export const useFollow = ({
     enabled: !!from,
     queryKey: ['follows', { from }, { to }],
     queryFn: async () => {
-      const follow = await getDoc(doc(db, `follows/${to}/from/${from}`));
+      const follow = await getDoc(docs.follow(to, from!));
       return follow.data() ?? null;
     },
   });

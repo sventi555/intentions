@@ -9,17 +9,13 @@ const firestoreConverter = <T>() => ({
 
 export const collections = {
   users: () => db.collection('users').withConverter(firestoreConverter<User>()),
-
   follows: (toUser: string) =>
     db
       .collection(`follows/${toUser}/from`)
       .withConverter(firestoreConverter<Follow>()),
-
   intentions: () =>
     db.collection('intentions').withConverter(firestoreConverter<Intention>()),
-
   posts: () => db.collection('posts').withConverter(firestoreConverter<Post>()),
-
   feed: (userId: string) =>
     db
       .collection(`users/${userId}/feed`)

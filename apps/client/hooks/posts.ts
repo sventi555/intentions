@@ -1,14 +1,7 @@
-import { db } from '@/config/firebase';
+import { collections } from '@/db';
 import { CreatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
+import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { useAuthUser } from './user';
 
 const feedPostsQueryKey = (userId: string | undefined) => ['feed', userId];
@@ -24,7 +17,7 @@ export const useFeedPosts = () => {
     queryKey: feedPostsQueryKey(user?.uid),
     queryFn: async () => {
       const feedPostsQuery = query(
-        collection(db, `/users/${user?.uid}/feed`),
+        collections.feed(user!.uid),
         orderBy('createdAt', 'desc'),
         limit(10),
       );
@@ -49,7 +42,7 @@ export const useUserPosts = (userId: string | undefined) => {
       (
         await getDocs(
           query(
-            collection(db, 'posts'),
+            collections.posts(),
             where('userId', '==', userId),
             orderBy('createdAt', 'desc'),
           ),

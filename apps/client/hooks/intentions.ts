@@ -1,7 +1,7 @@
-import { db } from '@/config/firebase';
+import { collections } from '@/db';
 import { CreateIntentionBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getDocs, query, where } from 'firebase/firestore';
 import { useAuthUser } from './user';
 
 const userIntentionsQueryKey = (userId: string | undefined) => [
@@ -19,7 +19,7 @@ export const useUserIntentions = (userId: string | undefined) => {
     queryFn: async () => {
       return (
         await getDocs(
-          query(collection(db, 'intentions'), where('userId', '==', userId)),
+          query(collections.intentions(), where('userId', '==', userId)),
         )
       ).docs;
     },

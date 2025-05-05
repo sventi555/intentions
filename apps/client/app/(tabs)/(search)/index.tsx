@@ -1,7 +1,7 @@
-import { db } from '@/config/firebase';
+import { collections } from '@/db';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getDocs, query, where } from 'firebase/firestore';
 import { useState } from 'react';
 import { FlatList, TextInput, View } from 'react-native';
 import { useDebounce } from 'use-debounce';
@@ -16,7 +16,7 @@ const Search = () => {
       return (
         await getDocs(
           query(
-            collection(db, 'users'),
+            collections.users(),
             where('username', '==', debouncedUsername),
           ),
         )
