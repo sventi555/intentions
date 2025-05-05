@@ -7,3 +7,8 @@ export const createUserBody = z.object({
   isPrivate: z.boolean(),
 });
 export type CreateUserBody = z.infer<typeof createUserBody>;
+
+export const updateUserBody = z.object({
+  image: z.string().optional(),
+});
+export type UpdateUserBody = z.infer<typeof updateUserBody>;

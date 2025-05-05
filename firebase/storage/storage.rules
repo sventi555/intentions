@@ -16,5 +16,9 @@ service firebase.storage {
 
       allow read: if (request.auth.uid == ownerId || followsOwner());
     }
+
+    match /dps/{ownerId}/{imageId} {
+      allow read: if true;
+    }
   }
 }

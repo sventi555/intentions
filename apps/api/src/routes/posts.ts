@@ -2,10 +2,9 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createPostBody, updatePostBody, type Post } from 'lib';
-import mime from 'mime-types';
-import { storage } from '../config';
 import { bulkWriter, collections } from '../db';
 import { authenticate } from '../middleware/auth';
+import { uploadMedia } from '../storage';
 
 const app = new Hono();
 
@@ -35,35 +34,15 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
 
   let imageFileName: string | undefined = undefined;
   if (data.image) {
-    const [imageMeta, image] = data.image.split(',');
-
-    const contentType = imageMeta.match(/data:(.*);base64/)?.[1];
-    if (!contentType) {
-      throw new HTTPException(400, { message: 'Mime type missing.' });
-    }
-
-    const [mimeType] = contentType.split('/');
-    if (!(mimeType === 'image' || mimeType === 'video')) {
-      throw new HTTPException(400, {
-        message: 'Mime type must be image or video.',
-      });
-    }
-
-    const extension = mime.extension(contentType);
-    if (!extension) {
-      throw new HTTPException(400, { message: 'Invalid mime type provided.' });
-    }
-
-    const bucket = storage.bucket();
-
-    const imageId = crypto.randomUUID();
-    imageFileName = `posts/${requesterId}/${imageId}.${extension}`;
-    await bucket.file(imageFileName).save(Buffer.from(image, 'base64'));
+    imageFileName = await uploadMedia(`posts/${requesterId}`, data.image);
   }
 
   const postData: Post = {
     userId: requesterId,
-    user: { username: userData.username },
+    user: {
+      username: userData.username,
+      ...(userData.image ? { image: userData.image } : {}),
+    },
     intentionId: data.intentionId,
     intention: { name: intentionData.name },
     createdAt: Date.now(),

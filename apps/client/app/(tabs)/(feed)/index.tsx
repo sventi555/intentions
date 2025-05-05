@@ -1,4 +1,4 @@
-import { Post, PostProps } from '@/components/post';
+import { Post } from '@/components/post';
 import { auth } from '@/config/firebase';
 import { useFeedPosts } from '@/hooks/posts';
 import { useAuthUser } from '@/hooks/user';
@@ -29,7 +29,7 @@ const Feed = () => {
       {posts && (
         <FlatList
           data={posts}
-          renderItem={({ item }) => <Post {...(item.data() as PostProps)} />}
+          renderItem={({ item }) => <Post {...item.data()} />}
         />
       )}
     </View>

@@ -1,42 +1,22 @@
-import { storage } from '@/config/firebase';
 import { useProfilePath } from '@/hooks/navigation';
+import { useDownloadUrl } from '@/hooks/storage';
 import { dayjs } from '@/utils/time';
+import { Post as _Post } from '@lib';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
-import { getDownloadURL, ref } from 'firebase/storage';
-import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { DisplayPic } from './display-pic';
 
-export interface PostProps {
-  userId: string;
-  user: {
-    username: string;
-  };
-  createdAt: number;
-  intentionId: string;
-  intention: {
-    name: string;
-  };
-  image?: string;
-  description?: string;
-}
+export interface PostProps extends _Post {}
 
 export const Post: React.FC<PostProps> = (props) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const profilePath = useProfilePath(props.userId);
-
-  useEffect(() => {
-    if (props.image) {
-      getDownloadURL(ref(storage, props.image))
-        .then((url) => setImageUrl(url))
-        .catch(() => {});
-    }
-  }, [props.image]);
+  const { url: imageUrl } = useDownloadUrl(props.image);
 
   return (
     <View style={{ borderRadius: 8, borderWidth: 1, padding: 8, gap: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text>DP</Text>
+        <DisplayPic user={props.user} />
         {profilePath ? (
           <Link href={profilePath}>{props.user.username}</Link>
         ) : (

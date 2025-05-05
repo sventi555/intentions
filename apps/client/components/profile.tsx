@@ -1,8 +1,9 @@
-import { Post, PostProps } from '@/components/post';
+import { Post } from '@/components/post';
 import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
 import { useUserPosts } from '@/hooks/posts';
 import { useAuthUser, useUser } from '@/hooks/user';
 import { Button, FlatList, Text, View } from 'react-native';
+import { DisplayPic } from './display-pic';
 
 interface ProfileProps {
   userId: string;
@@ -20,8 +21,13 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
     removeFollow({ userId, data: { direction: 'to' } });
 
   return (
-    <View style={{ flex: 1 }}>
-      <Text>{user?.username}</Text>
+    <View style={{ flex: 1, gap: 8 }}>
+      {user ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <DisplayPic size={40} user={user} />
+          <Text>{user?.username}</Text>
+        </View>
+      ) : null}
       {authUser?.uid === userId ? null : (
         <View>
           {follow ? (
@@ -38,7 +44,7 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
       {posts && (
         <FlatList
           data={posts}
-          renderItem={({ item }) => <Post {...(item.data() as PostProps)} />}
+          renderItem={({ item }) => <Post {...item.data()} />}
         />
       )}
     </View>

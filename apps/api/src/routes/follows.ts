@@ -40,14 +40,17 @@ app.post('/:userId', authenticate, async (c) => {
   if (!requester) {
     throw new HTTPException(500, { message: 'Requester data is missing' });
   }
-  const { username } = requester;
+  const { username, image } = requester;
 
   const writeBatch = bulkWriter();
 
   // create follow
   const followData: Follow = {
     status: isPrivate ? 'pending' : 'accepted',
-    fromUser: { username },
+    fromUser: {
+      username,
+      ...(image ? { image } : {}),
+    },
     createdAt: Date.now(),
   } as const;
   writeBatch.create(followDoc, followData);
