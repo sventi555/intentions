@@ -24,7 +24,6 @@ const CreatePost = () => {
       mediaTypes: ['images', 'videos'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
     });
 
     if (!result.canceled) {

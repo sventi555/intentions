@@ -1,6 +1,7 @@
 import { auth } from '@/config/firebase';
 import { docs } from '@/db';
-import { useQuery } from '@tanstack/react-query';
+import { UpdateUserBody } from '@lib';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
@@ -35,4 +36,30 @@ export const useUser = (userId: string | undefined) => {
   });
 
   return { user, isLoading, isError };
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  const authUser = useAuthUser();
+
+  const { mutateAsync: updateUser } = useMutation({
+    mutationFn: async (vars: UpdateUserBody) => {
+      const idToken = await authUser?.getIdToken();
+      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/users`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: idToken ?? '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(vars),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user', authUser?.uid] });
+      queryClient.invalidateQueries({ queryKey: ['posts', authUser?.uid] });
+      queryClient.invalidateQueries({ queryKey: ['feed', authUser?.uid] });
+    },
+  });
+
+  return updateUser;
 };

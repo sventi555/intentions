@@ -1,8 +1,10 @@
 import { Post } from '@/components/post';
 import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
 import { useUserPosts } from '@/hooks/posts';
-import { useAuthUser, useUser } from '@/hooks/user';
-import { Button, FlatList, Text, View } from 'react-native';
+import { useAuthUser, useUpdateUser, useUser } from '@/hooks/user';
+import { User } from '@lib';
+import * as ImagePicker from 'expo-image-picker';
+import { Button, FlatList, Pressable, Text, View } from 'react-native';
 import { DisplayPic } from './display-pic';
 
 interface ProfileProps {
@@ -20,15 +22,17 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
   const unfollowUser = () =>
     removeFollow({ userId, data: { direction: 'to' } });
 
+  const isOwner = authUser?.uid === userId;
+
   return (
     <View style={{ flex: 1, gap: 8 }}>
       {user ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <DisplayPic size={40} user={user} />
-          <Text>{user?.username}</Text>
+          <ProfileDP user={user} isOwner={isOwner} />
+          <Text>{user.username}</Text>
         </View>
       ) : null}
-      {authUser?.uid === userId ? null : (
+      {isOwner ? null : (
         <View>
           {follow ? (
             <Button
@@ -52,3 +56,56 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
 };
 
 export default Profile;
+
+interface ProfileDPProps {
+  isOwner: boolean;
+  user: User;
+}
+
+const ProfileDP: React.FC<ProfileDPProps> = ({ isOwner, user }) => {
+  const updateUser = useUpdateUser();
+  const updateDP = async (image: string) => {
+    await updateUser({ image });
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled) {
+      const image = result.assets[0].uri;
+      await updateDP(image);
+    }
+  };
+
+  const size = 112;
+
+  return (
+    <Pressable disabled={!isOwner} onPress={pickImage}>
+      <View style={{ position: 'relative', width: size, height: size }}>
+        <DisplayPic user={user} size={size} />
+        {isOwner ? (
+          <Text
+            numberOfLines={1}
+            style={{
+              padding: 4,
+              borderRadius: 8,
+              backgroundColor: '#00000080',
+              color: '#FFFFFF',
+              fontSize: 10,
+              position: 'absolute',
+              bottom: 24,
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            Tap to change
+          </Text>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+};
