@@ -1,4 +1,4 @@
-import { storage } from '@/config/firebase';
+import { storage } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 import { getDownloadURL, ref } from 'firebase/storage';
 

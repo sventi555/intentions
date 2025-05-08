@@ -1,4 +1,4 @@
-import { auth } from '@/config/firebase';
+import { auth } from '@/config';
 import { Link, useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
@@ -28,7 +28,7 @@ const SignIn = () => {
       />
       <Button title="login" onPress={signIn} />
       {errMsg ? <Text style={{ color: 'red' }}>{errMsg}</Text> : null}
-      <Link href="/sign-up">Create account</Link>
+      <Link href="/(auth)/sign-up">Create account</Link>
     </View>
   );
 };

@@ -1,3 +1,4 @@
+import { API_HOST } from '@/config';
 import { collections } from '@/db';
 import { CreateIntentionBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -43,7 +44,7 @@ export const useCreateIntention = ({
   const { mutateAsync: createIntention } = useMutation({
     mutationFn: async (vars: CreateIntentionBody) => {
       const idToken = await user?.getIdToken();
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/intentions`, {
+      await fetch(`${API_HOST}/intentions`, {
         method: 'POST',
         headers: {
           Authorization: idToken ?? '',

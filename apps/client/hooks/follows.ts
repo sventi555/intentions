@@ -1,3 +1,4 @@
+import { API_HOST } from '@/config';
 import { collections, docs } from '@/db';
 import { RemoveFollowBody, RespondToFollowBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,7 +59,7 @@ export const useFollowUser = (userId: string) => {
   const { mutateAsync: followUser } = useMutation({
     mutationFn: async () => {
       const idToken = await authUser?.getIdToken();
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/follows/${userId}`, {
+      await fetch(`${API_HOST}/follows/${userId}`, {
         method: 'POST',
         headers: { Authorization: idToken ?? '' },
       });
@@ -83,17 +84,14 @@ export const useRespondToFollow = () => {
   const { mutateAsync: respondToFollow } = useMutation({
     mutationFn: async (vars: { userId: string; data: RespondToFollowBody }) => {
       const idToken = await authUser?.getIdToken();
-      await fetch(
-        `${process.env.EXPO_PUBLIC_API_HOST}/follows/respond/${vars.userId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: idToken ?? '',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(vars.data),
+      await fetch(`${API_HOST}/follows/respond/${vars.userId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: idToken ?? '',
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(vars.data),
+      });
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
@@ -115,17 +113,14 @@ export const useRemoveFollow = () => {
   const { mutateAsync: respondToFollow } = useMutation({
     mutationFn: async (vars: { userId: string; data: RemoveFollowBody }) => {
       const idToken = await authUser?.getIdToken();
-      await fetch(
-        `${process.env.EXPO_PUBLIC_API_HOST}/follows/${vars.userId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: idToken ?? '',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(vars.data),
+      await fetch(`${API_HOST}/follows/${vars.userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: idToken ?? '',
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(vars.data),
+      });
     },
     onSuccess: (_, vars) => {
       const from = vars.data.direction === 'from' ? vars.userId : authUser?.uid;

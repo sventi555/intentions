@@ -7,13 +7,17 @@ interface DisplayPicProps {
   };
   size?: number;
 }
-export const DisplayPic: React.FC<DisplayPicProps> = ({ user, size }) => {
+export const DisplayPic: React.FC<DisplayPicProps> = ({ user, size = 24 }) => {
   const { url } = useDownloadUrl(user.image);
 
   return (
     <Image
       source={url ?? require('../assets/images/profile-placeholder.png')}
-      style={{ width: size ?? 24, height: size ?? 24, borderRadius: '100%' }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+      }}
     />
   );
 };

@@ -1,6 +1,6 @@
 import { Follow, Intention, Post, User } from '@lib';
 import { collection, doc, QueryDocumentSnapshot } from 'firebase/firestore';
-import { db } from './config/firebase';
+import { db } from './config';
 
 const firestoreConverter = <T>() => ({
   toFirestore: (data: T) => data,

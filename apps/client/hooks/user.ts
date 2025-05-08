@@ -1,4 +1,4 @@
-import { auth } from '@/config/firebase';
+import { API_HOST, auth } from '@/config';
 import { docs } from '@/db';
 import { UpdateUserBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -45,7 +45,7 @@ export const useUpdateUser = () => {
   const { mutateAsync: updateUser } = useMutation({
     mutationFn: async (vars: UpdateUserBody) => {
       const idToken = await authUser?.getIdToken();
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/users`, {
+      await fetch(`${API_HOST}/users`, {
         method: 'PATCH',
         headers: {
           Authorization: idToken ?? '',

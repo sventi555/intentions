@@ -1,5 +1,6 @@
 import { Post } from '@/components/post';
 import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
+import { useLayout } from '@/hooks/layout';
 import { useUserPosts } from '@/hooks/posts';
 import { useAuthUser, useUpdateUser, useUser } from '@/hooks/user';
 import { User } from '@lib';
@@ -82,6 +83,7 @@ const ProfileDP: React.FC<ProfileDPProps> = ({ isOwner, user }) => {
   };
 
   const size = 112;
+  const overlayTextLayout = useLayout();
 
   return (
     <Pressable disabled={!isOwner} onPress={pickImage}>
@@ -97,10 +99,11 @@ const ProfileDP: React.FC<ProfileDPProps> = ({ isOwner, user }) => {
               color: '#FFFFFF',
               fontSize: 10,
               position: 'absolute',
-              bottom: 24,
               left: '50%',
-              transform: 'translateX(-50%)',
+              transform: `translateX(-${overlayTextLayout.width / 2}px)`,
+              bottom: 24,
             }}
+            onLayout={overlayTextLayout.onLayout}
           >
             Tap to change
           </Text>

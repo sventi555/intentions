@@ -1,4 +1,4 @@
-import { auth } from '@/config/firebase';
+import { API_HOST, auth } from '@/config';
 import { CreateUserBody } from '@lib';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useRouter } from 'expo-router';
@@ -19,7 +19,7 @@ const SignUp = () => {
 
   const { mutateAsync: createUser } = useMutation({
     mutationFn: async (vars: CreateUserBody) => {
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/users`, {
+      await fetch(`${API_HOST}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ const SignUp = () => {
       />
       <Button title="create" onPress={onCreateUser} />
       {errMsg ? <Text style={{ color: 'red' }}>{errMsg}</Text> : null}
-      <Link href="/sign-in">Sign in</Link>
+      <Link href="/(auth)/sign-in">Sign in</Link>
     </View>
   );
 };

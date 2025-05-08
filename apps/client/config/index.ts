@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
@@ -18,8 +19,18 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+// Enable mobile device to access services running on host machine
+const hostUri = Constants.expoConfig?.hostUri?.split(':')[0];
+const origin = hostUri ?? '127.0.0.1';
+
 if (process.env.NODE_ENV !== 'production') {
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  connectStorageEmulator(storage, '127.0.0.1', 9199);
+  connectAuthEmulator(auth, `http://${origin}:9099`, {
+    disableWarnings: true,
+  });
+  connectFirestoreEmulator(db, origin, 8080);
+  connectStorageEmulator(storage, origin, 9199);
 }
+
+export const API_HOST = process.env.EXPO_PUBLIC_API_HOST
+  ? `${process.env.EXPO_PUBLIC_API_HOST}`
+  : `http://${origin}:${process.env.EXPO_PUBLIC_API_PORT}`;

@@ -1,3 +1,4 @@
+import { API_HOST } from '@/config';
 import { collections } from '@/db';
 import { CreatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,7 +59,7 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
   const { mutateAsync: createPost } = useMutation({
     mutationFn: async (vars: CreatePostBody) => {
       const idToken = await user?.getIdToken();
-      await fetch(`${process.env.EXPO_PUBLIC_API_HOST}/posts`, {
+      await fetch(`${API_HOST}/posts`, {
         method: 'POST',
         headers: {
           Authorization: idToken ?? '',

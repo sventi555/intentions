@@ -1,5 +1,5 @@
 import { Post } from '@/components/post';
-import { auth } from '@/config/firebase';
+import { auth } from '@/config';
 import { useFeedPosts } from '@/hooks/posts';
 import { useAuthUser } from '@/hooks/user';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,7 +24,7 @@ const Feed = () => {
           Sign out
         </Text>
       ) : (
-        <Link href="/sign-in">Sign in</Link>
+        <Link href="/(auth)/sign-in">Sign in</Link>
       )}
       {posts && (
         <FlatList
