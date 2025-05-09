@@ -1,5 +1,6 @@
 import { API_HOST } from '@/config';
 import { collections } from '@/db';
+import { blobToBase64 } from '@/utils/blob';
 import { CreatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
@@ -58,6 +59,13 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
 
   const { mutateAsync: createPost } = useMutation({
     mutationFn: async (vars: CreatePostBody) => {
+      let image: string | undefined = undefined;
+      if (vars.image) {
+        image = await fetch(vars.image)
+          .then((res) => res.blob())
+          .then(blobToBase64);
+      }
+
       const idToken = await user?.getIdToken();
       await fetch(`${API_HOST}/posts`, {
         method: 'POST',
@@ -65,7 +73,7 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
           Authorization: idToken ?? '',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(vars),
+        body: JSON.stringify({ ...vars, image }),
       });
     },
     onSuccess: () => {
@@ -73,6 +81,7 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
       queryClient.invalidateQueries({ queryKey: ['posts', user?.uid] });
       onSuccess();
     },
+    onError: () => {},
   });
 
   return createPost;

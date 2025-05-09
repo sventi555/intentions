@@ -1,5 +1,6 @@
 import { API_HOST, auth } from '@/config';
 import { docs } from '@/db';
+import { blobToBase64 } from '@/utils/blob';
 import { UpdateUserBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -44,6 +45,13 @@ export const useUpdateUser = () => {
 
   const { mutateAsync: updateUser } = useMutation({
     mutationFn: async (vars: UpdateUserBody) => {
+      let image: string | undefined = undefined;
+      if (vars.image) {
+        image = await fetch(vars.image)
+          .then((res) => res.blob())
+          .then(blobToBase64);
+      }
+
       const idToken = await authUser?.getIdToken();
       await fetch(`${API_HOST}/users`, {
         method: 'PATCH',
@@ -51,7 +59,7 @@ export const useUpdateUser = () => {
           Authorization: idToken ?? '',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(vars),
+        body: JSON.stringify({ ...vars, image }),
       });
     },
     onSuccess: () => {
