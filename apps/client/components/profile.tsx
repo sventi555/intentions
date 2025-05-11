@@ -26,33 +26,36 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
   const isOwner = authUser?.uid === userId;
 
   return (
-    <View style={{ flex: 1, gap: 8 }}>
-      {user ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <ProfileDP user={user} isOwner={isOwner} />
-          <Text>{user.username}</Text>
-        </View>
-      ) : null}
-      {isOwner ? null : (
-        <View>
-          {follow ? (
-            <Button
-              title={follow.status === 'pending' ? 'Pending' : 'Unfollow'}
-              onPress={() => unfollowUser()}
-              color="gray"
-            />
-          ) : (
-            <Button title={'Follow'} onPress={() => followUser()} />
+    <FlatList
+      contentContainerStyle={{ gap: 8 }}
+      ListHeaderComponent={() => (
+        <>
+          {user ? (
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            >
+              <ProfileDP user={user} isOwner={isOwner} />
+              <Text>{user.username}</Text>
+            </View>
+          ) : null}
+          {isOwner ? null : (
+            <View>
+              {follow ? (
+                <Button
+                  title={follow.status === 'pending' ? 'Pending' : 'Unfollow'}
+                  onPress={() => unfollowUser()}
+                  color="gray"
+                />
+              ) : (
+                <Button title={'Follow'} onPress={() => followUser()} />
+              )}
+            </View>
           )}
-        </View>
+        </>
       )}
-      {posts && (
-        <FlatList
-          data={posts}
-          renderItem={({ item }) => <Post {...item.data()} />}
-        />
-      )}
-    </View>
+      data={posts}
+      renderItem={({ item }) => <Post {...item.data()} />}
+    />
   );
 };
 

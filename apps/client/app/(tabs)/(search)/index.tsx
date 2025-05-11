@@ -36,7 +36,7 @@ const Search = () => {
         renderItem={({ item }) => (
           <Link
             href={{
-              pathname: '/(tabs)/(search)/[userId]',
+              pathname: '/(tabs)/(search)/user/[userId]',
               params: { userId: item.id },
             }}
           >

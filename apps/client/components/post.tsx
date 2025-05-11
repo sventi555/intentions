@@ -1,4 +1,4 @@
-import { useProfilePath } from '@/hooks/navigation';
+import { useIntentionPath, useProfilePath } from '@/hooks/navigation';
 import { useDownloadUrl } from '@/hooks/storage';
 import { dayjs } from '@/utils/time';
 import { Post as _Post } from '@lib';
@@ -11,6 +11,7 @@ export interface PostProps extends _Post {}
 
 export const Post: React.FC<PostProps> = (props) => {
   const profilePath = useProfilePath(props.userId);
+  const intentionPath = useIntentionPath(props.intentionId);
   const { url: imageUrl } = useDownloadUrl(props.image);
 
   return (
@@ -19,23 +20,24 @@ export const Post: React.FC<PostProps> = (props) => {
         <DisplayPic user={props.user} />
         {profilePath ? (
           <Link href={profilePath}>{props.user.username}</Link>
-        ) : (
-          <Text>{props.user.username}</Text>
-        )}
+        ) : null}
         <Text style={{ color: 'grey' }}>
           {dayjs(props.createdAt).fromNow()}
         </Text>
       </View>
-      <Text
-        style={{
-          borderWidth: 1,
-          padding: 4,
-          alignSelf: 'flex-start',
-          borderRadius: 8,
-        }}
-      >
-        {props.intention.name}
-      </Text>
+      {intentionPath ? (
+        <Link
+          style={{
+            borderWidth: 1,
+            padding: 4,
+            alignSelf: 'flex-start',
+            borderRadius: 8,
+          }}
+          href={intentionPath}
+        >
+          {props.intention.name}
+        </Link>
+      ) : null}
       {imageUrl ? (
         <Image source={imageUrl} style={{ width: '100%', aspectRatio: 1 }} />
       ) : null}

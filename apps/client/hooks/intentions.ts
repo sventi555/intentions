@@ -1,9 +1,24 @@
 import { API_HOST } from '@/config';
-import { collections } from '@/db';
+import { collections, docs } from '@/db';
 import { CreateIntentionBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDocs, orderBy, query, where } from 'firebase/firestore';
+import { getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { useAuthUser } from './user';
+
+export const useIntention = (intentionId: string) => {
+  const {
+    data: intention,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['intention', intentionId],
+    queryFn: async () => {
+      return (await getDoc(docs.intention(intentionId))).data();
+    },
+  });
+
+  return { intention, isLoading, isError };
+};
 
 const userIntentionsQueryKey = (userId: string | undefined) => [
   'intentions',

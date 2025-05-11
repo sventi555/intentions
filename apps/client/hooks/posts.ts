@@ -3,7 +3,7 @@ import { collections } from '@/db';
 import { blobToBase64 } from '@/utils/blob';
 import { CreatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { getDocs, orderBy, query, where } from 'firebase/firestore';
 import { useAuthUser } from './user';
 
 export const useFeedPosts = () => {
@@ -20,7 +20,6 @@ export const useFeedPosts = () => {
       const feedPostsQuery = query(
         collections.feed(user!.uid),
         orderBy('createdAt', 'desc'),
-        limit(10),
       );
 
       return (await getDocs(feedPostsQuery)).docs;
@@ -37,13 +36,40 @@ export const useUserPosts = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: ['posts', userId],
+    queryKey: ['posts', { user: userId }],
     queryFn: async () =>
       (
         await getDocs(
           query(
             collections.posts(),
             where('userId', '==', userId),
+            orderBy('createdAt', 'desc'),
+          ),
+        )
+      ).docs,
+  });
+
+  return { posts, isLoading, isError };
+};
+
+export const useIntentionPosts = (
+  ownerId: string | undefined,
+  intentionId: string,
+) => {
+  const {
+    data: posts,
+    isLoading,
+    isError,
+  } = useQuery({
+    enabled: !!ownerId,
+    queryKey: ['posts', { intention: intentionId }],
+    queryFn: async () =>
+      (
+        await getDocs(
+          query(
+            collections.posts(),
+            where('userId', '==', ownerId), // needed to get past security rules
+            where('intentionId', '==', intentionId),
             orderBy('createdAt', 'desc'),
           ),
         )
@@ -78,7 +104,9 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feed', user?.uid] });
-      queryClient.invalidateQueries({ queryKey: ['posts', user?.uid] });
+      queryClient.invalidateQueries({
+        queryKey: ['posts', { user: user?.uid }],
+      });
       onSuccess();
     },
     onError: () => {},

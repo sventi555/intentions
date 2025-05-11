@@ -5,7 +5,7 @@ import { useAuthUser } from '@/hooks/user';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Text } from 'react-native';
 
 const Feed = () => {
   const user = useAuthUser();
@@ -13,26 +13,24 @@ const Feed = () => {
   const queryClient = useQueryClient();
 
   return (
-    <View style={{ flex: 1 }}>
-      {user ? (
-        <Text
-          onPress={() => {
-            queryClient.removeQueries();
-            signOut(auth);
-          }}
-        >
-          Sign out
-        </Text>
-      ) : (
-        <Link href="/(auth)/sign-in">Sign in</Link>
-      )}
-      {posts && (
-        <FlatList
-          data={posts}
-          renderItem={({ item }) => <Post {...item.data()} />}
-        />
-      )}
-    </View>
+    <FlatList
+      ListHeaderComponent={() =>
+        user ? (
+          <Text
+            onPress={() => {
+              queryClient.removeQueries();
+              signOut(auth);
+            }}
+          >
+            Sign out
+          </Text>
+        ) : (
+          <Link href="/(auth)/sign-in">Sign in</Link>
+        )
+      }
+      data={posts}
+      renderItem={({ item }) => <Post {...item.data()} />}
+    />
   );
 };
 

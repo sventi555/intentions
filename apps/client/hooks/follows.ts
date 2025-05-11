@@ -2,7 +2,7 @@ import { API_HOST } from '@/config';
 import { collections, docs } from '@/db';
 import { RemoveFollowBody, RespondToFollowBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import { getDoc, getDocs, orderBy, query } from 'firebase/firestore';
 import { useAuthUser } from './user';
 
 export const useFollowsToUser = (userId: string | undefined) => {
@@ -16,11 +16,7 @@ export const useFollowsToUser = (userId: string | undefined) => {
     queryFn: async () => {
       return (
         await getDocs(
-          query(
-            collections.follows(userId!),
-            orderBy('createdAt', 'desc'),
-            limit(10),
-          ),
+          query(collections.follows(userId!), orderBy('createdAt', 'desc')),
         )
       ).docs;
     },

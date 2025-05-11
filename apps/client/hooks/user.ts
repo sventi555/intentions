@@ -64,7 +64,9 @@ export const useUpdateUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user', authUser?.uid] });
-      queryClient.invalidateQueries({ queryKey: ['posts', authUser?.uid] });
+      queryClient.invalidateQueries({
+        queryKey: ['posts', { user: authUser?.uid }],
+      });
       queryClient.invalidateQueries({ queryKey: ['feed', authUser?.uid] });
     },
   });
