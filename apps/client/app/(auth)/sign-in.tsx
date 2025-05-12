@@ -14,7 +14,7 @@ const SignIn = () => {
 
   const signIn = () =>
     signInWithEmailAndPassword(auth, email, pass)
-      .then(() => router.navigate('/(tabs)'))
+      .then(() => router.navigate('/(tabs)/(feed)'))
       .catch((err) => setErrMsg(err.message));
 
   return (

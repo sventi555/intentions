@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { feedQueryKey, postsQueryKey } from './posts';
 
 export const useAuthUser = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -30,7 +31,7 @@ export const useUser = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: ['user', userId],
+    queryKey: userQueryKey(userId),
     queryFn: async () => {
       return (await getDoc(docs.user(userId!))).data();
     },
@@ -63,13 +64,15 @@ export const useUpdateUser = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user', authUser?.uid] });
+      queryClient.invalidateQueries({ queryKey: userQueryKey(authUser?.uid) });
       queryClient.invalidateQueries({
-        queryKey: ['posts', { user: authUser?.uid }],
+        queryKey: postsQueryKey({ user: authUser?.uid }),
       });
-      queryClient.invalidateQueries({ queryKey: ['feed', authUser?.uid] });
+      queryClient.invalidateQueries({ queryKey: feedQueryKey(authUser?.uid) });
     },
   });
 
   return updateUser;
 };
+
+const userQueryKey = (userId: string | undefined) => ['user', userId];

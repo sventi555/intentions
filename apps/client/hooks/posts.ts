@@ -15,7 +15,7 @@ export const useFeedPosts = () => {
     isError,
   } = useQuery({
     enabled: !!user,
-    queryKey: ['feed', user?.uid],
+    queryKey: feedQueryKey(user?.uid),
     queryFn: async () => {
       const feedPostsQuery = query(
         collections.feed(user!.uid),
@@ -36,7 +36,7 @@ export const useUserPosts = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: ['posts', { user: userId }],
+    queryKey: postsQueryKey({ user: userId }),
     queryFn: async () =>
       (
         await getDocs(
@@ -62,7 +62,7 @@ export const useIntentionPosts = (
     isError,
   } = useQuery({
     enabled: !!ownerId,
-    queryKey: ['posts', { intention: intentionId }],
+    queryKey: postsQueryKey({ intention: intentionId }),
     queryFn: async () =>
       (
         await getDocs(
@@ -103,10 +103,11 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feed', user?.uid] });
+      queryClient.invalidateQueries({ queryKey: feedQueryKey(user?.uid) });
       queryClient.invalidateQueries({
-        queryKey: ['posts', { user: user?.uid }],
+        queryKey: postsQueryKey({ user: user?.uid }),
       });
+
       onSuccess();
     },
     onError: () => {},
@@ -114,3 +115,10 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return createPost;
 };
+
+export const feedQueryKey = (userId: string | undefined) => ['feed', userId];
+
+export const postsQueryKey = (subKeys: {
+  user?: string | undefined;
+  intention?: string;
+}) => ['posts', ...Object.entries(subKeys)];

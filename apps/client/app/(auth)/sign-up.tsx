@@ -40,7 +40,7 @@ const SignUp = () => {
     try {
       await createUser({ email, username, password, isPrivate });
       await signInWithEmailAndPassword(auth, email, password);
-      router.navigate('/(tabs)');
+      router.navigate('/(tabs)/(feed)');
     } catch {
       setErrMsg('Something went wrong, please try again.');
     }

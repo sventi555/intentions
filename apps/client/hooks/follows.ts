@@ -12,7 +12,7 @@ export const useFollowsToUser = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: ['follows', { to: userId }],
+    queryKey: followsQueryKey({ to: userId }),
     queryFn: async () => {
       return (
         await getDocs(
@@ -38,7 +38,7 @@ export const useFollow = ({
     isError,
   } = useQuery({
     enabled: !!from,
-    queryKey: ['follows', { from }, { to }],
+    queryKey: followsQueryKey({ from, to }),
     queryFn: async () => {
       const follow = await getDoc(docs.follow(to, from!));
       return follow.data() ?? null;
@@ -62,10 +62,10 @@ export const useFollowUser = (userId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['follows', { from: authUser?.uid }],
+        queryKey: followsQueryKey({ from: authUser?.uid }),
       });
       queryClient.invalidateQueries({
-        queryKey: ['follows', { to: userId }],
+        queryKey: followsQueryKey({ to: userId }),
       });
     },
   });
@@ -91,10 +91,10 @@ export const useRespondToFollow = () => {
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
-        queryKey: ['follows', { from: vars.userId }],
+        queryKey: followsQueryKey({ from: vars.userId }),
       });
       queryClient.invalidateQueries({
-        queryKey: ['follows', { to: authUser?.uid }],
+        queryKey: followsQueryKey({ to: authUser?.uid }),
       });
     },
   });
@@ -122,10 +122,15 @@ export const useRemoveFollow = () => {
       const from = vars.data.direction === 'from' ? vars.userId : authUser?.uid;
       const to = vars.data.direction === 'to' ? vars.userId : authUser?.uid;
 
-      queryClient.invalidateQueries({ queryKey: ['follows', { from }] });
-      queryClient.invalidateQueries({ queryKey: ['follows', { to }] });
+      queryClient.invalidateQueries({ queryKey: followsQueryKey({ from }) });
+      queryClient.invalidateQueries({ queryKey: followsQueryKey({ to }) });
     },
   });
 
   return respondToFollow;
 };
+
+const followsQueryKey = (subKeys: {
+  from?: string | undefined;
+  to?: string | undefined;
+}) => ['posts', ...Object.entries(subKeys)];
