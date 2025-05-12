@@ -7,6 +7,10 @@ service firebase.storage {
     }
 
     match /posts/{ownerId}/{imageId} {
+      function isOwner() {
+        return request.auth.uid == ownerId;
+      }
+
       function followsOwner() {
         return (
           firestore.exists(/databases/(default)/documents/follows/$(ownerId)/from/$(request.auth.uid)) &&
@@ -14,7 +18,16 @@ service firebase.storage {
         );
       }
 
-      allow read: if (request.auth.uid == ownerId || followsOwner());
+      function ownerIsPublic() {
+        return (
+          firestore.exists(/databases/(default)/documents/users/$(ownerId)) &&
+          firestore.get(/databases/(default)/documents/users/$(ownerId)).data.private == false
+        );
+      }
+
+      allow read: if (
+        ownerIsPublic() || (request.auth != null && (isOwner() || followsOwner()))
+      );
     }
 
     match /dps/{ownerId}/{imageId} {
