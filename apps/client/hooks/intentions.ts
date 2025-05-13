@@ -3,7 +3,7 @@ import { collections, docs } from '@/db';
 import { CreateIntentionBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
-import { useAuthUser } from './user';
+import { useAuthUser } from './auth';
 
 export const useIntention = (intentionId: string) => {
   const {

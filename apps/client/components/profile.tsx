@@ -1,8 +1,9 @@
 import { Post } from '@/components/post';
+import { useAuthUser } from '@/hooks/auth';
 import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
 import { useLayout } from '@/hooks/layout';
 import { useUserPosts } from '@/hooks/posts';
-import { useAuthUser, useUpdateUser, useUser } from '@/hooks/user';
+import { useUpdateUser, useUser } from '@/hooks/user';
 import { User } from '@lib';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, FlatList, Pressable, Text, View } from 'react-native';
@@ -18,7 +19,7 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
   const { posts } = useUserPosts(userId);
   const { follow } = useFollow({ from: authUser?.uid, to: userId });
 
-  const followUser = useFollowUser(userId);
+  const followUser = useFollowUser();
   const removeFollow = useRemoveFollow();
   const unfollowUser = () =>
     removeFollow({ userId, data: { direction: 'to' } });
@@ -47,14 +48,17 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
                   color="gray"
                 />
               ) : (
-                <Button title={'Follow'} onPress={() => followUser()} />
+                <Button
+                  title={'Follow'}
+                  onPress={() => followUser({ userId })}
+                />
               )}
             </View>
           )}
         </>
       )}
       data={posts}
-      renderItem={({ item }) => <Post {...item.data()} />}
+      renderItem={({ item }) => <Post id={item.id} {...item.data()} />}
     />
   );
 };

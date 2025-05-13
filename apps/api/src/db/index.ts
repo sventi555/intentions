@@ -1,6 +1,6 @@
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import type { Follow, Intention, Post, User } from 'lib';
-import { db } from './config';
+import { db } from '../config';
 
 const firestoreConverter = <T>() => ({
   toFirestore: (data: T) => data,

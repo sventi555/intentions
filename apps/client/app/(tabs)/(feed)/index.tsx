@@ -1,7 +1,7 @@
 import { Post } from '@/components/post';
 import { auth } from '@/config';
+import { useAuthUser } from '@/hooks/auth';
 import { useFeedPosts } from '@/hooks/posts';
-import { useAuthUser } from '@/hooks/user';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { signOut } from 'firebase/auth';
@@ -29,7 +29,7 @@ const Feed = () => {
         )
       }
       data={posts}
-      renderItem={({ item }) => <Post {...item.data()} />}
+      renderItem={({ item }) => <Post id={item.id} {...item.data()} />}
     />
   );
 };

@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { createUserBody, updateUserBody } from 'lib';
 import { auth } from '../config';
 import { bulkWriter, collections } from '../db';
+import { userPostDocCopies } from '../db/denorm';
 import { authenticate } from '../middleware/auth';
 import { uploadMedia } from '../storage';
 
@@ -57,31 +58,8 @@ app.patch('/', authenticate, zValidator('json', updateUserBody), async (c) => {
     ...(imageFileName ? { 'user.image': imageFileName } : {}),
   };
 
-  // update profile posts
-  const userPosts = await collections
-    .posts()
-    .where('userId', '==', requesterId)
-    .get();
-  userPosts.forEach(async (post) => {
-    writeBatch.update(post.ref, updatePostData);
-  });
-
-  // update feed posts
-  const followers = await collections.follows(requesterId).get();
-  followers.docs.forEach(async (follower) => {
-    const feedPosts = await collections
-      .feed(follower.id)
-      .where('userId', '==', requesterId)
-      .get();
-    feedPosts.forEach((post) => {
-      writeBatch.update(post.ref, updatePostData);
-    });
-  });
-  const ownFeed = await collections
-    .feed(requesterId)
-    .where('userId', '==', requesterId)
-    .get();
-  ownFeed.forEach((post) => writeBatch.update(post.ref, updatePostData));
+  const postDocs = await userPostDocCopies(requesterId);
+  postDocs.forEach((doc) => writeBatch.update(doc, updatePostData));
 
   await writeBatch.close();
 

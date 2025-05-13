@@ -1,5 +1,5 @@
 import Profile from '@/components/profile';
-import { useAuthUser } from '@/hooks/user';
+import { useAuthUser } from '@/hooks/auth';
 
 const MyProfile = () => {
   const user = useAuthUser();

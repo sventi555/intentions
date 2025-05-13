@@ -1,6 +1,6 @@
+import { useAuthUser } from '@/hooks/auth';
 import { useUserIntentions } from '@/hooks/intentions';
 import { useCreatePost } from '@/hooks/posts';
-import { useAuthUser } from '@/hooks/user';
 import { Picker } from '@react-native-picker/picker';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';

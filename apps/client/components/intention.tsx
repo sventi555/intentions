@@ -15,7 +15,7 @@ export const Intention: React.FC<IntentionProps> = ({ intentionId }) => {
     <FlatList
       ListHeaderComponent={() => <Text>{intention?.name}</Text>}
       data={posts}
-      renderItem={({ item }) => <Post {...item.data()} />}
+      renderItem={({ item }) => <Post id={item.id} {...item.data()} />}
     />
   );
 };

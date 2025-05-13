@@ -4,7 +4,7 @@ import { blobToBase64 } from '@/utils/blob';
 import { CreatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDocs, orderBy, query, where } from 'firebase/firestore';
-import { useAuthUser } from './user';
+import { useAuthUser } from './auth';
 
 export const useFeedPosts = () => {
   const user = useAuthUser();
@@ -36,7 +36,7 @@ export const useUserPosts = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: postsQueryKey({ user: userId }),
+    queryKey: postsQueryKey({ ownerId: userId }),
     queryFn: async () =>
       (
         await getDocs(
@@ -62,7 +62,7 @@ export const useIntentionPosts = (
     isError,
   } = useQuery({
     enabled: !!ownerId,
-    queryKey: postsQueryKey({ intention: intentionId }),
+    queryKey: postsQueryKey({ ownerId: ownerId, intention: intentionId }),
     queryFn: async () =>
       (
         await getDocs(
@@ -105,7 +105,7 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey(user?.uid) });
       queryClient.invalidateQueries({
-        queryKey: postsQueryKey({ user: user?.uid }),
+        queryKey: postsQueryKey({ ownerId: user?.uid }),
       });
 
       onSuccess();
@@ -116,9 +116,35 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
   return createPost;
 };
 
+export const useDeletePost = () => {
+  const user = useAuthUser();
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: deletePost } = useMutation({
+    mutationFn: async (vars: { postId: string }) => {
+      const idToken = await user?.getIdToken();
+
+      await fetch(`${API_HOST}/posts/${vars.postId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: idToken ?? '',
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: feedQueryKey(user?.uid) });
+      queryClient.invalidateQueries({
+        queryKey: postsQueryKey({ ownerId: user?.uid }),
+      });
+    },
+  });
+
+  return deletePost;
+};
+
 export const feedQueryKey = (userId: string | undefined) => ['feed', userId];
 
 export const postsQueryKey = (subKeys: {
-  user?: string | undefined;
+  ownerId?: string | undefined;
   intention?: string;
 }) => ['posts', ...Object.entries(subKeys)];

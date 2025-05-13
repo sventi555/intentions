@@ -1,5 +1,5 @@
+import { useAuthUser } from '@/hooks/auth';
 import { useFollowsToUser, useRespondToFollow } from '@/hooks/follows';
-import { useAuthUser } from '@/hooks/user';
 import { dayjs } from '@/utils/time';
 import { Button, Text, View } from 'react-native';
 

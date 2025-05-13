@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createPostBody, updatePostBody, type Post } from 'lib';
 import { bulkWriter, collections } from '../db';
+import { postDocCopies } from '../db/denorm';
 import { authenticate } from '../middleware/auth';
 import { uploadMedia } from '../storage';
 
@@ -52,21 +53,9 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
 
   const writeBatch = bulkWriter();
 
-  // add post to posts collection
   const postId = crypto.randomUUID();
-  const postDoc = collections.posts().doc(postId);
-  writeBatch.create(postDoc, postData);
-
-  // add post to follower feeds
-  const followers = await collections.follows(requesterId).get();
-  followers.docs.forEach((follower) => {
-    const feedPost = collections.feed(follower.id).doc(postId);
-    writeBatch.create(feedPost, postData);
-  });
-
-  // add post to own feed
-  const ownFeedPost = collections.feed(requesterId).doc(postId);
-  writeBatch.create(ownFeedPost, postData);
+  const postDocs = await postDocCopies(postId, requesterId);
+  postDocs.forEach((doc) => writeBatch.create(doc, postData));
 
   await writeBatch.close();
 
@@ -82,8 +71,7 @@ app.patch(
     const postId = c.req.param('id');
     const updatedData = c.req.valid('json');
 
-    const postDoc = collections.posts().doc(postId);
-    const postData = (await postDoc.get()).data();
+    const postData = (await collections.posts().doc(postId).get()).data();
     if (!postData) {
       throw new HTTPException(404, { message: 'Post does not exist.' });
     }
@@ -95,16 +83,8 @@ app.patch(
 
     const writeBatch = bulkWriter();
 
-    writeBatch.update(postDoc, updatedData);
-
-    const followers = await collections.follows(requesterId).get();
-    followers.docs.forEach((follower) => {
-      const feedPost = collections.feed(follower.id).doc(postId);
-      writeBatch.update(feedPost, updatedData);
-    });
-
-    const ownFeedPost = collections.feed(requesterId).doc(postId);
-    writeBatch.update(ownFeedPost, updatedData);
+    const postDocs = await postDocCopies(postId, requesterId);
+    postDocs.forEach((doc) => writeBatch.update(doc, updatedData));
 
     await writeBatch.close();
 
@@ -116,8 +96,7 @@ app.delete('/:id', authenticate, async (c) => {
   const requesterId = c.var.uid;
   const postId = c.req.param('id');
 
-  const postDoc = collections.posts().doc(postId);
-  const postData = (await postDoc.get()).data();
+  const postData = (await collections.posts().doc(postId).get()).data();
   if (!postData) {
     return;
   }
@@ -127,16 +106,8 @@ app.delete('/:id', authenticate, async (c) => {
 
   const writeBatch = bulkWriter();
 
-  writeBatch.delete(postDoc);
-
-  const followers = await collections.follows(requesterId).get();
-  followers.docs.forEach((follower) => {
-    const feedPost = collections.feed(follower.id).doc(postId);
-    writeBatch.delete(feedPost);
-  });
-
-  const ownFeedPost = collections.feed(requesterId).doc(postId);
-  writeBatch.delete(ownFeedPost);
+  const postDocs = await postDocCopies(postId, requesterId);
+  postDocs.forEach((doc) => writeBatch.delete(doc));
 
   await writeBatch.close();
 

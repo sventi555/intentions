@@ -3,7 +3,7 @@ import { collections, docs } from '@/db';
 import { RemoveFollowBody, RespondToFollowBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDoc, getDocs, orderBy, query } from 'firebase/firestore';
-import { useAuthUser } from './user';
+import { useAuthUser } from './auth';
 
 export const useFollowsToUser = (userId: string | undefined) => {
   const {
@@ -48,24 +48,24 @@ export const useFollow = ({
   return { follow, isLoading, isError };
 };
 
-export const useFollowUser = (userId: string) => {
+export const useFollowUser = () => {
   const authUser = useAuthUser();
   const queryClient = useQueryClient();
 
   const { mutateAsync: followUser } = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (vars: { userId: string }) => {
       const idToken = await authUser?.getIdToken();
-      await fetch(`${API_HOST}/follows/${userId}`, {
+      await fetch(`${API_HOST}/follows/${vars.userId}`, {
         method: 'POST',
         headers: { Authorization: idToken ?? '' },
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
         queryKey: followsQueryKey({ from: authUser?.uid }),
       });
       queryClient.invalidateQueries({
-        queryKey: followsQueryKey({ to: userId }),
+        queryKey: followsQueryKey({ to: vars.userId }),
       });
     },
   });

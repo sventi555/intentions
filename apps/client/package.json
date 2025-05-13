@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "14.1.0",
+    "@react-native-menu/menu": "1.2.2",
     "@react-native-picker/picker": "2.11.0",
     "@react-navigation/bottom-tabs": "7.2.0",
     "@react-navigation/native": "7.0.14",
@@ -34,12 +35,15 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "2.24.0",
+    "react-native-ios-context-menu": "3.1.0",
+    "react-native-ios-utilities": "5.1.2",
     "react-native-reanimated": "3.17.5",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "4.10.0",
     "react-native-web": "0.20.0",
     "react-native-webview": "13.13.5",
-    "use-debounce": "10.0.4"
+    "use-debounce": "10.0.4",
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "7.27.1",

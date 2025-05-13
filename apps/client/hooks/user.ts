@@ -1,28 +1,11 @@
-import { API_HOST, auth } from '@/config';
+import { API_HOST } from '@/config';
 import { docs } from '@/db';
 import { blobToBase64 } from '@/utils/blob';
 import { UpdateUserBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useAuthUser } from './auth';
 import { feedQueryKey, postsQueryKey } from './posts';
-
-export const useAuthUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (u) => {
-      if (u) {
-        setUser(u);
-      } else {
-        setUser(null);
-      }
-    });
-  }, []);
-
-  return user;
-};
 
 export const useUser = (userId: string | undefined) => {
   const {
@@ -66,7 +49,7 @@ export const useUpdateUser = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userQueryKey(authUser?.uid) });
       queryClient.invalidateQueries({
-        queryKey: postsQueryKey({ user: authUser?.uid }),
+        queryKey: postsQueryKey({ ownerId: authUser?.uid }),
       });
       queryClient.invalidateQueries({ queryKey: feedQueryKey(authUser?.uid) });
     },
