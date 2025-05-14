@@ -40,7 +40,7 @@ const CreatePost = () => {
   const createPost = useCreatePost({
     onSuccess: () => {
       resetState();
-      router.back();
+      router.navigate('/(tabs)/(feed)');
     },
   });
 

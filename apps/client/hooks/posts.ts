@@ -1,10 +1,24 @@
 import { API_HOST } from '@/config';
-import { collections } from '@/db';
+import { collections, docs } from '@/db';
 import { blobToBase64 } from '@/utils/blob';
-import { CreatePostBody } from '@lib';
+import { CreatePostBody, UpdatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDocs, orderBy, query, where } from 'firebase/firestore';
+import { getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { useAuthUser } from './auth';
+
+export const usePost = (postId: string) => {
+  const {
+    data: post,
+    isLoading,
+    isError,
+  } = useQuery({
+    enabled: !!postId,
+    queryKey: postQueryKey({ id: postId! }),
+    queryFn: async () => (await getDoc(docs.post(postId!))).data(),
+  });
+
+  return { post, isLoading, isError };
+};
 
 export const useFeedPosts = () => {
   const user = useAuthUser();
@@ -15,7 +29,7 @@ export const useFeedPosts = () => {
     isError,
   } = useQuery({
     enabled: !!user,
-    queryKey: feedQueryKey(user?.uid),
+    queryKey: feedQueryKey(),
     queryFn: async () => {
       const feedPostsQuery = query(
         collections.feed(user!.uid),
@@ -62,7 +76,7 @@ export const useIntentionPosts = (
     isError,
   } = useQuery({
     enabled: !!ownerId,
-    queryKey: postsQueryKey({ ownerId: ownerId, intention: intentionId }),
+    queryKey: postsQueryKey({ ownerId: ownerId, intentionId: intentionId }),
     queryFn: async () =>
       (
         await getDocs(
@@ -103,7 +117,7 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: feedQueryKey(user?.uid) });
+      queryClient.invalidateQueries({ queryKey: feedQueryKey() });
       queryClient.invalidateQueries({
         queryKey: postsQueryKey({ ownerId: user?.uid }),
       });
@@ -114,6 +128,40 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   return createPost;
+};
+
+export const useUpdatePost = ({ onSettled }: { onSettled: () => void }) => {
+  const user = useAuthUser();
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: updatePost } = useMutation({
+    mutationFn: async (vars: { postId: string; data: UpdatePostBody }) => {
+      const idToken = await user?.getIdToken();
+
+      await fetch(`${API_HOST}/posts/${vars.postId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: idToken ?? '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(vars.data),
+      });
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: feedQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: postsQueryKey({ ownerId: user?.uid }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: postQueryKey({ id: vars.postId }),
+      });
+    },
+    onSettled: () => {
+      onSettled();
+    },
+  });
+
+  return updatePost;
 };
 
 export const useDeletePost = () => {
@@ -132,7 +180,7 @@ export const useDeletePost = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: feedQueryKey(user?.uid) });
+      queryClient.invalidateQueries({ queryKey: feedQueryKey() });
       queryClient.invalidateQueries({
         queryKey: postsQueryKey({ ownerId: user?.uid }),
       });
@@ -142,9 +190,14 @@ export const useDeletePost = () => {
   return deletePost;
 };
 
-export const feedQueryKey = (userId: string | undefined) => ['feed', userId];
+const postQueryKey = (subKeys: {
+  id: string;
+  // ownerId: string
+}) => ['post', ...Object.entries(subKeys)];
+
+export const feedQueryKey = () => ['feed'];
 
 export const postsQueryKey = (subKeys: {
-  ownerId?: string | undefined;
-  intention?: string;
+  ownerId: string | undefined;
+  intentionId?: string;
 }) => ['posts', ...Object.entries(subKeys)];

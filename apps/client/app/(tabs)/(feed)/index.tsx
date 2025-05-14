@@ -29,7 +29,7 @@ const Feed = () => {
         )
       }
       data={posts}
-      renderItem={({ item }) => <Post id={item.id} {...item.data()} />}
+      renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
     />
   );
 };

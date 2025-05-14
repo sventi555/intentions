@@ -11,7 +11,7 @@ export const useIntention = (intentionId: string) => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: intentionQueryKey(intentionId),
+    queryKey: intentionQueryKey({ id: intentionId }),
     queryFn: async () => {
       return (await getDoc(docs.intention(intentionId))).data();
     },
@@ -27,7 +27,7 @@ export const useUserIntentions = (userId: string | undefined) => {
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: userIntentionsQueryKey(userId),
+    queryKey: userIntentionsQueryKey({ ownerId: userId }),
     queryFn: async () => {
       return (
         await getDocs(
@@ -66,7 +66,7 @@ export const useCreateIntention = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: userIntentionsQueryKey(user?.uid),
+        queryKey: userIntentionsQueryKey({ ownerId: user?.uid }),
       });
       onSuccess();
     },
@@ -75,9 +75,12 @@ export const useCreateIntention = ({
   return createIntention;
 };
 
-const intentionQueryKey = (intentionId: string) => ['intention', intentionId];
+const intentionQueryKey = (subKeys: {
+  id: string;
+  // ownerId: string | undefined;
+}) => ['intention', ...Object.entries(subKeys)];
 
-const userIntentionsQueryKey = (userId: string | undefined) => [
+const userIntentionsQueryKey = (subKeys: { ownerId: string | undefined }) => [
   'intentions',
-  userId,
+  ...Object.entries(subKeys),
 ];
