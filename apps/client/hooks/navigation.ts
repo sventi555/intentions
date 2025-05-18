@@ -18,6 +18,41 @@ export const useProfilePath = (
         params: { userId },
       };
     }
+    if (segments[1] === '(profile)') {
+      return {
+        pathname: '/(tabs)/(profile)/user/[userId]',
+        params: { userId },
+      };
+    }
+  }
+
+  return undefined;
+};
+
+export const useProfileIntentionsPath = (
+  userId: string,
+): LinkProps['href'] | undefined => {
+  const segments = useSegments();
+
+  if (segments[0] === '(tabs)') {
+    if (segments[1] === '(search)') {
+      return {
+        pathname: '/(tabs)/(search)/user/[userId]/intentions',
+        params: { userId },
+      };
+    }
+    if (segments[1] === '(feed)') {
+      return {
+        pathname: '/(tabs)/(feed)/user/[userId]/intentions',
+        params: { userId },
+      };
+    }
+    if (segments[1] === '(profile)') {
+      return {
+        pathname: '/(tabs)/(profile)/user/[userId]/intentions',
+        params: { userId },
+      };
+    }
   }
 
   return undefined;

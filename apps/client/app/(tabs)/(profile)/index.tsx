@@ -1,14 +1,26 @@
-import Profile from '@/components/profile';
 import { useAuthUser } from '@/hooks/auth';
+import { Redirect } from 'expo-router';
+import { Text, View } from 'react-native';
 
-const MyProfile = () => {
+const OwnProfile = () => {
   const user = useAuthUser();
 
   if (!user) {
-    return null;
+    return (
+      <View>
+        <Text>Create an account or sign in to view your profile!</Text>
+      </View>
+    );
   }
 
-  return <Profile userId={user.uid} />;
+  return (
+    <Redirect
+      href={{
+        pathname: '/(tabs)/(profile)/user/[userId]',
+        params: { userId: user.uid },
+      }}
+    />
+  );
 };
 
-export default MyProfile;
+export default OwnProfile;

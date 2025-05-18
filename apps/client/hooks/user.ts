@@ -16,7 +16,7 @@ export const useUser = (userId: string | undefined) => {
     enabled: !!userId,
     queryKey: userQueryKey(userId),
     queryFn: async () => {
-      return (await getDoc(docs.user(userId!))).data();
+      return (await getDoc(docs.user(userId!))).data() ?? null;
     },
   });
 

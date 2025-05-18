@@ -1,22 +1,19 @@
-import { Post } from '@/components/post';
 import { useAuthUser } from '@/hooks/auth';
 import { useFollow, useFollowUser, useRemoveFollow } from '@/hooks/follows';
 import { useLayout } from '@/hooks/layout';
-import { useUserPosts } from '@/hooks/posts';
 import { useUpdateUser, useUser } from '@/hooks/user';
 import { User } from '@lib';
 import * as ImagePicker from 'expo-image-picker';
-import { Button, FlatList, Pressable, Text, View } from 'react-native';
-import { DisplayPic } from './display-pic';
+import { Button, Pressable, Text, View } from 'react-native';
+import { DisplayPic } from '../display-pic';
 
-interface ProfileProps {
+interface ProfileHeaderProps {
   userId: string;
 }
 
-const Profile: React.FC<ProfileProps> = ({ userId }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userId }) => {
   const authUser = useAuthUser();
   const { user } = useUser(userId);
-  const { posts } = useUserPosts(userId);
   const { follow } = useFollow({ from: authUser?.uid, to: userId });
 
   const followUser = useFollowUser();
@@ -26,44 +23,34 @@ const Profile: React.FC<ProfileProps> = ({ userId }) => {
 
   const isOwner = authUser?.uid === userId;
 
+  if (!user) {
+    return null;
+  }
+
   return (
-    <FlatList
-      contentContainerStyle={{ gap: 8 }}
-      ListHeaderComponent={() => (
-        <>
-          {user ? (
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-            >
-              <ProfileDP user={user} isOwner={isOwner} />
-              <Text>{user.username}</Text>
-            </View>
-          ) : null}
-          {isOwner ? null : (
-            <View>
-              {follow ? (
-                <Button
-                  title={follow.status === 'pending' ? 'Pending' : 'Unfollow'}
-                  onPress={() => unfollowUser()}
-                  color="gray"
-                />
-              ) : (
-                <Button
-                  title={'Follow'}
-                  onPress={() => followUser({ userId })}
-                />
-              )}
-            </View>
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <ProfileDP user={user} isOwner={isOwner} />
+        <Text>{user.username}</Text>
+      </View>
+      {isOwner ? null : (
+        <View>
+          {follow ? (
+            <Button
+              title={follow.status === 'pending' ? 'Pending' : 'Unfollow'}
+              onPress={() => unfollowUser()}
+              color="gray"
+            />
+          ) : (
+            <Button title={'Follow'} onPress={() => followUser({ userId })} />
           )}
-        </>
+        </View>
       )}
-      data={posts}
-      renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
-    />
+    </View>
   );
 };
 
-export default Profile;
+export default ProfileHeader;
 
 interface ProfileDPProps {
   isOwner: boolean;
