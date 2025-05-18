@@ -1,10 +1,11 @@
 Top of queue:
+- finish profile intentions tab
+- convert pages to nicer designs
 - clean up optional checks in use query hooks (use throws instead)
 - immediately update feed after following someone public
 
 Next:
 - set up expo build for proper development builds to test native constructs
-- sketch pages and consider flows
 
 Get around to eventually:
 - generalize 'ownerId' field on post(s), intention(s) to allow for clean removal after unfollow
@@ -12,5 +13,3 @@ Get around to eventually:
 - set email field to be private (or just remove from BE, use auth as source of truth)
 - tests for storage rules
 
-ideas:
-- maybe have a little breakdown of ~3-5 most active intentions on someone's profile
