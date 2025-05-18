@@ -10,6 +10,7 @@ export const ProfilePosts: React.FC<{ userId: string }> = ({ userId }) => {
       contentContainerStyle={{ gap: 8 }}
       data={posts}
       renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
+      keyExtractor={(item) => item.id}
     />
   );
 };

@@ -6,7 +6,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { Button, Switch, Text, TextInput, View } from 'react-native';
 
-const SignUp = () => {
+const SignUp: React.FC = () => {
   const router = useRouter();
 
   const [username, setUsername] = useState('');

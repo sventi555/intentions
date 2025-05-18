@@ -8,7 +8,7 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
-const CreatePost = () => {
+const CreatePost: React.FC = () => {
   const router = useRouter();
   const user = useAuthUser();
 

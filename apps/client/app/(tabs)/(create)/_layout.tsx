@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-const CreateLayout = () => {
+const CreateLayout: React.FC = () => {
   return <Stack screenOptions={{ headerShown: false }} />;
 };
 

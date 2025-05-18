@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { FlatList, TextInput, View } from 'react-native';
 import { useDebounce } from 'use-debounce';
 
-const Search = () => {
+const Search: React.FC = () => {
   const [username, setUsername] = useState('');
   const [debouncedUsername] = useDebounce(username, 500);
 

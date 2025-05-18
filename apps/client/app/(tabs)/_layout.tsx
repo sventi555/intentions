@@ -7,7 +7,7 @@ export const unstable_settings = {
   initialRouteName: '(feed)/index',
 };
 
-export default function TabLayout() {
+const TabLayout: React.FC = () => {
   const { postId } = useEditPost();
 
   return (
@@ -74,4 +74,6 @@ export default function TabLayout() {
       </Tabs>
     </>
   );
-}
+};
+
+export default TabLayout;

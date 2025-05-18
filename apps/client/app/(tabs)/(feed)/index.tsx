@@ -7,7 +7,7 @@ import { Link } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { FlatList, Text } from 'react-native';
 
-const Feed = () => {
+const Feed: React.FC = () => {
   const user = useAuthUser();
   const { posts } = useFeedPosts();
   const queryClient = useQueryClient();
@@ -30,6 +30,7 @@ const Feed = () => {
       }
       data={posts}
       renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
+      keyExtractor={(item) => item.id}
     />
   );
 };

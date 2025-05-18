@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
-const CreateIntention = () => {
+const CreateIntention: React.FC = () => {
   const router = useRouter();
 
   const [intention, setIntention] = useState('');

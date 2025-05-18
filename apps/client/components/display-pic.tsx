@@ -7,6 +7,7 @@ interface DisplayPicProps {
   };
   size?: number;
 }
+
 export const DisplayPic: React.FC<DisplayPicProps> = ({ user, size = 24 }) => {
   const { url } = useDownloadUrl(user.image);
 

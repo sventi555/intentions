@@ -5,7 +5,7 @@ import ProfileHeader from './header';
 
 export const ProfileLayout: React.FC<{ userId: string }> = ({ userId }) => {
   const profilePath = useProfilePath(userId);
-  const profileIntionsPath = useProfileIntentionsPath(userId);
+  const profileIntentionsPath = useProfileIntentionsPath(userId);
 
   return (
     <View style={{ flex: 1 }}>
@@ -29,7 +29,7 @@ export const ProfileLayout: React.FC<{ userId: string }> = ({ userId }) => {
           <TabTrigger
             style={{ flex: 1, padding: 8, backgroundColor: 'lightgray' }}
             name="intentions"
-            href={profileIntionsPath}
+            href={profileIntentionsPath}
           >
             <Text style={{ textAlign: 'center' }}>Intentions</Text>
           </TabTrigger>

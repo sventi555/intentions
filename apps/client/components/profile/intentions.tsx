@@ -6,7 +6,9 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
 
   return (
     <View>
-      {intentions?.map((intention) => <Text>{intention.data().name}</Text>)}
+      {intentions?.map((intention) => (
+        <Text key={intention.id}>{intention.data().name}</Text>
+      ))}
     </View>
   );
 };

@@ -3,7 +3,7 @@ import { useFollowsToUser, useRespondToFollow } from '@/hooks/follows';
 import { dayjs } from '@/utils/time';
 import { Button, Text, View } from 'react-native';
 
-const Notifications = () => {
+const Notifications: React.FC = () => {
   const authUser = useAuthUser();
   const { follows } = useFollowsToUser(authUser?.uid);
   const respondToFollow = useRespondToFollow();

@@ -1,5 +1,7 @@
 import { Slot } from 'expo-router';
 
-export default () => {
+const ProfileLayout: React.FC = () => {
   return <Slot />;
 };
+
+export default ProfileLayout;
