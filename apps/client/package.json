@@ -6,7 +6,8 @@
     "dev": "expo start",
     "build": "expo export",
     "start": "expo serve",
-    "format": "prettier --check ."
+    "format": "prettier --check .",
+    "check-types": "tsc"
   },
   "dependencies": {
     "@expo/vector-icons": "14.1.0",
