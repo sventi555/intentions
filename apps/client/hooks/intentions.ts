@@ -1,8 +1,15 @@
 import { API_HOST } from '@/config';
 import { collections, docs } from '@/db';
-import { CreateIntentionBody } from '@lib';
+import { CreateIntentionBody, Intention } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
+import {
+  getDoc,
+  getDocs,
+  orderBy,
+  OrderByDirection,
+  query,
+  where,
+} from 'firebase/firestore';
 import { useAuthUser } from './auth';
 
 export const useIntention = (intentionId: string) => {
@@ -20,21 +27,36 @@ export const useIntention = (intentionId: string) => {
   return { intention, isLoading, isError };
 };
 
-export const useUserIntentions = (userId: string | undefined) => {
+export const INTENTION_ORDER_FIELDS = [
+  'updatedAt',
+  'name',
+  'postCount',
+] as const satisfies (keyof Intention)[];
+export type IntentionOrderField = (typeof INTENTION_ORDER_FIELDS)[number];
+
+export interface UserIntentionsOrder {
+  by: IntentionOrderField;
+  dir: OrderByDirection;
+}
+
+export const useUserIntentions = (
+  userId: string | undefined,
+  order: UserIntentionsOrder = { by: 'name', dir: 'desc' },
+) => {
   const {
     data: intentions,
     isLoading,
     isError,
   } = useQuery({
     enabled: !!userId,
-    queryKey: userIntentionsQueryKey({ ownerId: userId }),
+    queryKey: userIntentionsQueryKey({ ownerId: userId, order }),
     queryFn: async () => {
       return (
         await getDocs(
           query(
             collections.intentions(),
             where('userId', '==', userId),
-            orderBy('createdAt', 'desc'),
+            orderBy(order.by, order.dir),
           ),
         )
       ).docs;
@@ -80,7 +102,7 @@ const intentionQueryKey = (subKeys: {
   // ownerId: string | undefined;
 }) => ['intention', ...Object.entries(subKeys)];
 
-const userIntentionsQueryKey = (subKeys: { ownerId: string | undefined }) => [
-  'intentions',
-  ...Object.entries(subKeys),
-];
+const userIntentionsQueryKey = (subKeys: {
+  ownerId: string | undefined;
+  order?: UserIntentionsOrder;
+}) => ['intentions', ...Object.entries(subKeys)];
