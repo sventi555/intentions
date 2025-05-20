@@ -1,45 +1,44 @@
-import {
-  INTENTION_ORDER_FIELDS,
-  IntentionOrderField,
-  UserIntentionsOrder,
-  useUserIntentions,
-} from '@/hooks/intentions';
+import { IntentionOrderField, useUserIntentions } from '@/hooks/intentions';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Picker } from '@react-native-picker/picker';
+import { OrderByDirection } from 'firebase/firestore';
 import { useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
-export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
-  const [order, setOrder] = useState<UserIntentionsOrder>({
-    by: 'name',
-    dir: 'asc',
-  });
+const orderLabels = {
+  updatedAt: 'Active',
+  name: 'Name',
+  postCount: 'Total posts',
+} as const satisfies Partial<Record<IntentionOrderField, string>>;
 
-  const { intentions } = useUserIntentions(userId, order);
+type OrderField = keyof typeof orderLabels;
+
+export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
+  const [orderBy, setOrderBy] = useState<OrderField>('updatedAt');
+  const [orderDir, setOrderDir] = useState<OrderByDirection>('asc');
+
+  const { intentions } = useUserIntentions(userId, {
+    by: orderBy,
+    dir: getAdjustedDir(orderBy, orderDir),
+  });
 
   return (
     <FlatList
       ListHeaderComponent={() => (
         <View style={{ flexDirection: 'row' }}>
           <Picker
-            onValueChange={(val) => setOrder({ ...order, by: val })}
-            selectedValue={order.by}
+            onValueChange={(val) => setOrderBy(val)}
+            selectedValue={orderBy}
           >
-            {INTENTION_ORDER_FIELDS.map((field) => (
-              <Picker.Item
-                key={field}
-                label={orderLabels[field]}
-                value={field}
-              />
+            {Object.entries(orderLabels).map(([field, label]) => (
+              <Picker.Item key={field} label={label} value={field} />
             ))}
           </Picker>
 
           <Text
-            onPress={() =>
-              setOrder({ ...order, dir: order.dir === 'asc' ? 'desc' : 'asc' })
-            }
+            onPress={() => setOrderDir(orderDir === 'asc' ? 'desc' : 'asc')}
           >
-            {order.dir === 'asc' ? (
+            {orderDir === 'asc' ? (
               <FontAwesome name="chevron-up" />
             ) : (
               <FontAwesome name="chevron-down" />
@@ -62,8 +61,13 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
   );
 };
 
-const orderLabels: Record<IntentionOrderField, string> = {
-  updatedAt: 'Active',
-  name: 'Name',
-  postCount: 'Total posts',
+const getAdjustedDir = (
+  orderField: OrderField,
+  dir: OrderByDirection,
+): OrderByDirection => {
+  if (orderField === 'postCount' || orderField === 'updatedAt') {
+    return dir === 'asc' ? 'desc' : 'asc';
+  }
+
+  return dir;
 };

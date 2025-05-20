@@ -30,8 +30,14 @@ app.post(
       });
     }
 
-    const intentionData = { userId: requesterId, name, createdAt: Date.now() };
-    await collections.intentions().add(intentionData);
+    const now = Date.now();
+    await collections.intentions().add({
+      userId: requesterId,
+      name,
+      createdAt: now,
+      updatedAt: now,
+      postCount: 0,
+    });
 
     return c.body(null, 201);
   },

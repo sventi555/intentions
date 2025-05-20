@@ -5,6 +5,7 @@ import { CreatePostBody, UpdatePostBody } from '@lib';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { useAuthUser } from './auth';
+import { userIntentionsQueryKey } from './intentions';
 
 export const usePost = (postId: string) => {
   const {
@@ -121,6 +122,9 @@ export const useCreatePost = ({ onSuccess }: { onSuccess: () => void }) => {
       queryClient.invalidateQueries({
         queryKey: postsQueryKey({ ownerId: user?.uid }),
       });
+      queryClient.invalidateQueries({
+        queryKey: userIntentionsQueryKey({ ownerId: user?.uid }),
+      });
 
       onSuccess();
     },
@@ -183,6 +187,9 @@ export const useDeletePost = () => {
       queryClient.invalidateQueries({ queryKey: feedQueryKey() });
       queryClient.invalidateQueries({
         queryKey: postsQueryKey({ ownerId: user?.uid }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: userIntentionsQueryKey({ ownerId: user?.uid }),
       });
     },
   });

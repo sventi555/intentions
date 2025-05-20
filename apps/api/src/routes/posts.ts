@@ -14,8 +14,8 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
   const data = c.req.valid('json');
 
   // need to get the intention and the user object to embed within the post data
-  const intention = await collections.intentions().doc(data.intentionId).get();
-  const intentionData = intention.data();
+  const intentionDoc = collections.intentions().doc(data.intentionId);
+  const intentionData = (await intentionDoc.get()).data();
   if (!intentionData) {
     throw new HTTPException(404, {
       message: `An intention with id ${data.intentionId} does not exist.`,
@@ -56,6 +56,11 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
   const postId = crypto.randomUUID();
   const postDocs = await postDocCopies(postId, requesterId);
   postDocs.forEach((doc) => writeBatch.create(doc, postData));
+
+  writeBatch.update(intentionDoc, {
+    updatedAt: Date.now(),
+    postCount: intentionData.postCount + 1,
+  });
 
   await writeBatch.close();
 
@@ -108,6 +113,12 @@ app.delete('/:id', authenticate, async (c) => {
 
   const postDocs = await postDocCopies(postId, requesterId);
   postDocs.forEach((doc) => writeBatch.delete(doc));
+
+  const intentionDoc = collections.intentions().doc(postData.intentionId);
+  const intentionData = (await intentionDoc.get()).data();
+  if (intentionData) {
+    writeBatch.update(intentionDoc, { postCount: intentionData.postCount - 1 });
+  }
 
   await writeBatch.close();
 

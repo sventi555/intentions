@@ -16,7 +16,10 @@ const CreatePost: React.FC = () => {
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
 
-  const { intentions } = useUserIntentions(user?.uid);
+  const { intentions } = useUserIntentions(user?.uid, {
+    by: 'createdAt',
+    dir: 'desc',
+  });
   const selectedIntentionId = intentionId || intentions?.[0]?.id;
 
   const pickImage = async () => {

@@ -17,6 +17,8 @@ export interface Intention {
   userId: string;
   name: string;
   createdAt: number;
+  updatedAt: number;
+  postCount: number;
 }
 
 export interface Post {
