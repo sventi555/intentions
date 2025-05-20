@@ -14,7 +14,7 @@ const Feed: React.FC = () => {
 
   return (
     <FlatList
-      contentContainerStyle={{ gap: 4 }}
+      contentContainerStyle={{ gap: 8 }}
       ListHeaderComponent={() =>
         user ? (
           <Text

@@ -1,9 +1,11 @@
+import { DisplayPic } from '@/components/display-pic';
+import { Input } from '@/components/text-input';
 import { collections } from '@/db';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { getDocs, query, where } from 'firebase/firestore';
 import { useState } from 'react';
-import { FlatList, TextInput, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import { useDebounce } from 'use-debounce';
 
 const Search: React.FC = () => {
@@ -25,24 +27,34 @@ const Search: React.FC = () => {
   });
 
   return (
-    <View>
-      <TextInput
-        placeholder="Search username"
+    <View style={{ gap: 8, padding: 8 }}>
+      <Input
         value={username}
-        onChangeText={setUsername}
+        onChange={setUsername}
+        placeholder="Search username"
       />
       <FlatList
         data={userResults}
-        renderItem={({ item }) => (
-          <Link
-            href={{
-              pathname: '/(tabs)/(search)/user/[userId]',
-              params: { userId: item.id },
-            }}
-          >
-            {item.data().username}
-          </Link>
-        )}
+        renderItem={({ item }) => {
+          const user = item.data();
+
+          return (
+            <Link
+              asChild={true}
+              href={{
+                pathname: '/(tabs)/(search)/user/[userId]',
+                params: { userId: item.id },
+              }}
+            >
+              <View
+                style={{ alignItems: 'center', flexDirection: 'row', gap: 4 }}
+              >
+                <DisplayPic user={user} />
+                <Text>{user.username}</Text>
+              </View>
+            </Link>
+          );
+        }}
         keyExtractor={(item) => item.id}
       />
     </View>

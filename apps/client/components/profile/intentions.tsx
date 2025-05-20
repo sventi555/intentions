@@ -50,6 +50,7 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
           </Text>
         </View>
       )}
+      contentContainerStyle={{ padding: 8 }}
       renderItem={({ item }) => (
         <View style={{}}>
           <IntentionListItem id={item.id} intention={item.data()} />
@@ -88,7 +89,7 @@ const IntentionListItem: React.FC<{ id: string; intention: Intention }> = ({
   }
 
   return (
-    <Link href={intentionPath}>
+    <Link asChild={true} href={intentionPath}>
       <View style={{ flexDirection: 'column' }}>
         <Text>{intention.name}</Text>
         <Text>Active {dayjs(intention.updatedAt).fromNow()}</Text>

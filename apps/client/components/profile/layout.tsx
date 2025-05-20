@@ -34,9 +34,7 @@ export const ProfileLayout: React.FC<{ userId: string }> = ({ userId }) => {
             <Text style={{ textAlign: 'center' }}>Intentions</Text>
           </TabTrigger>
         </TabList>
-        <View style={{ padding: 8 }}>
-          <TabSlot />
-        </View>
+        <TabSlot style={{ flex: 1 }} />
       </Tabs>
     </View>
   );
