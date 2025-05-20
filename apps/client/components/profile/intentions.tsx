@@ -1,6 +1,10 @@
 import { IntentionOrderField, useUserIntentions } from '@/hooks/intentions';
+import { useIntentionPath } from '@/hooks/navigation';
+import { dayjs } from '@/utils/time';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Intention } from '@lib';
 import { Picker } from '@react-native-picker/picker';
+import { Link } from 'expo-router';
 import { OrderByDirection } from 'firebase/firestore';
 import { useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
@@ -46,15 +50,16 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
           </Text>
         </View>
       )}
-      renderItem={({ item }) => {
-        const intention = item.data();
-
-        return (
-          <View>
-            <Text>{intention.name}</Text>
-          </View>
-        );
-      }}
+      renderItem={({ item }) => (
+        <View style={{}}>
+          <IntentionListItem id={item.id} intention={item.data()} />
+        </View>
+      )}
+      ItemSeparatorComponent={() => (
+        <View
+          style={{ height: 1, backgroundColor: 'gray', marginVertical: 4 }}
+        />
+      )}
       data={intentions}
       keyExtractor={(intention) => intention.id}
     />
@@ -70,4 +75,25 @@ const getAdjustedDir = (
   }
 
   return dir;
+};
+
+const IntentionListItem: React.FC<{ id: string; intention: Intention }> = ({
+  id,
+  intention,
+}) => {
+  const intentionPath = useIntentionPath(id);
+
+  if (!intentionPath) {
+    return null;
+  }
+
+  return (
+    <Link href={intentionPath}>
+      <View style={{ flexDirection: 'column' }}>
+        <Text>{intention.name}</Text>
+        <Text>Active {dayjs(intention.updatedAt).fromNow()}</Text>
+        <Text>Total posts: {intention.postCount}</Text>
+      </View>
+    </Link>
+  );
 };
