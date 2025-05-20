@@ -5,6 +5,7 @@ Top of queue:
 
 Next:
 - set up expo build for proper development builds to test native constructs
+- release with expo build services
 
 Get around to eventually:
 - generalize 'ownerId' field on post(s), intention(s) queries to allow for clean removal after unfollow
