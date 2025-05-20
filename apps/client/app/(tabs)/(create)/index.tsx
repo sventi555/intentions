@@ -117,7 +117,19 @@ const CreatePost: React.FC = () => {
         value={description}
       />
 
-      <Button title="post" disabled={!valid} onPress={onSubmit} />
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: 8,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Button title="discard" onPress={resetState} color="gray" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button title="post" disabled={!valid} onPress={onSubmit} />
+        </View>
+      </View>
     </View>
   );
 };

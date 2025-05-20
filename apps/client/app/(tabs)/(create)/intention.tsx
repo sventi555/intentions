@@ -21,23 +21,26 @@ const CreateIntention: React.FC = () => {
   return (
     <View
       style={{
-        gap: 16,
-        padding: 16,
         alignItems: 'center',
         justifyContent: 'center',
         flex: 1,
       }}
     >
-      <View style={{ width: 256 }}>
+      <View style={{ width: 256, gap: 8 }}>
         <Input
           placeholder="Write an intention"
           centered={true}
           value={intention}
           onChange={setIntention}
         />
-      </View>
-      <View style={{ width: 200 }}>
-        <Button title="Create" disabled={!intention} onPress={onSubmit} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Button title="Cancel" color="gray" onPress={() => router.back()} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button title="Create" disabled={!intention} onPress={onSubmit} />
+          </View>
+        </View>
       </View>
     </View>
   );
