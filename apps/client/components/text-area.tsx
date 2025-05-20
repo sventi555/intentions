@@ -1,28 +1,21 @@
 import { TextInput } from 'react-native';
 
-interface InputProps {
+interface TextAreaProps {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
-  password?: boolean;
-  onSubmit?: () => void;
-  centered?: boolean;
+  numberOfLines?: number;
 }
 
-export const Input: React.FC<InputProps> = ({
+export const TextArea: React.FC<TextAreaProps> = ({
   value,
   onChange,
   placeholder,
-  password,
-  onSubmit,
-  centered,
+  numberOfLines,
 }) => {
   return (
     <TextInput
-      secureTextEntry={password}
       style={{
-        display: 'flex',
-        textAlign: centered ? 'center' : undefined,
         borderColor: 'gray',
         borderWidth: 1,
         borderRadius: 4,
@@ -30,10 +23,11 @@ export const Input: React.FC<InputProps> = ({
         color: 'black',
       }}
       placeholderTextColor="gray"
+      numberOfLines={numberOfLines}
+      multiline
       placeholder={placeholder}
       value={value}
       onChangeText={onChange}
-      onSubmitEditing={onSubmit}
     />
   );
 };

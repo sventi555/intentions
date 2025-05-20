@@ -1,12 +1,14 @@
+import { TextArea } from '@/components/text-area';
 import { useAuthUser } from '@/hooks/auth';
 import { useUserIntentions } from '@/hooks/intentions';
 import { useCreatePost } from '@/hooks/posts';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Picker } from '@react-native-picker/picker';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Button, TextInput, View } from 'react-native';
+import { Button, Pressable, Text, View } from 'react-native';
 
 const CreatePost: React.FC = () => {
   const router = useRouter();
@@ -62,31 +64,59 @@ const CreatePost: React.FC = () => {
   const valid = selectedIntentionId && (image || description);
 
   return (
-    <View style={{ gap: 8 }}>
-      <Picker
-        onValueChange={(val) => setIntentionId(val)}
-        selectedValue={intentionId}
-      >
-        {intentions?.map((intention) => (
-          <Picker.Item
-            key={intention.id}
-            label={intention.data().name}
-            value={intention.id}
-          />
-        ))}
-      </Picker>
-      <Link href="/(tabs)/(create)/intention">+ Create intention</Link>
-      <Button title="upload image" onPress={pickImage} />
-      {image && (
-        <Image source={image} style={{ width: '100%', aspectRatio: 1 }} />
-      )}
-      <TextInput
+    <View style={{ padding: 8, gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+          <Text>Intention:</Text>
+          <Picker
+            onValueChange={(val) => setIntentionId(val)}
+            selectedValue={intentionId}
+          >
+            {intentions?.map((intention) => (
+              <Picker.Item
+                key={intention.id}
+                label={intention.data().name}
+                value={intention.id}
+              />
+            ))}
+          </Picker>
+        </View>
+        <Link href="/(tabs)/(create)/intention">
+          <FontAwesome name="plus-square-o" size={16} />
+        </Link>
+      </View>
+
+      <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+        {image ? (
+          <Image source={image} style={{ width: '100%', aspectRatio: 1 }} />
+        ) : (
+          <>
+            <Pressable onPress={pickImage}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  borderWidth: 2,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FontAwesome name="image" size={28} />
+              </View>
+            </Pressable>
+            <Text>Add image</Text>
+          </>
+        )}
+      </View>
+
+      <TextArea
+        numberOfLines={4}
         placeholder="Add a description"
-        multiline
-        style={{ borderWidth: 1, height: 60 }}
-        onChangeText={setDescription}
+        onChange={setDescription}
         value={description}
       />
+
       <Button title="post" disabled={!valid} onPress={onSubmit} />
     </View>
   );
