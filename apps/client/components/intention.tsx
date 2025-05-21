@@ -1,7 +1,7 @@
-import { Post } from '@/components/post';
 import { useIntention } from '@/hooks/intentions';
 import { useIntentionPosts } from '@/hooks/posts';
-import { FlatList, Text } from 'react-native';
+import { Text } from 'react-native';
+import { PostList } from './post-list';
 
 interface IntentionPostsProps {
   intentionId: string;
@@ -13,12 +13,5 @@ export const IntentionPosts: React.FC<IntentionPostsProps> = ({
   const { intention } = useIntention(intentionId);
   const { posts } = useIntentionPosts(intention?.userId, intentionId);
 
-  return (
-    <FlatList
-      ListHeaderComponent={() => <Text>{intention?.name}</Text>}
-      data={posts}
-      renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
-      keyExtractor={(item) => item.id}
-    />
-  );
+  return <PostList Header={<Text>{intention?.name}</Text>} posts={posts} />;
 };

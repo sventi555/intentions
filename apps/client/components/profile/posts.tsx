@@ -1,16 +1,8 @@
-import { Post } from '@/components/post';
 import { useUserPosts } from '@/hooks/posts';
-import { FlatList } from 'react-native';
+import { PostList } from '../post-list';
 
 export const ProfilePosts: React.FC<{ userId: string }> = ({ userId }) => {
   const { posts } = useUserPosts(userId);
 
-  return (
-    <FlatList
-      contentContainerStyle={{ gap: 8 }}
-      data={posts}
-      renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
-      keyExtractor={(item) => item.id}
-    />
-  );
+  return <PostList posts={posts} />;
 };

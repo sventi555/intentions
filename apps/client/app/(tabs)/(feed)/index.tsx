@@ -1,11 +1,11 @@
-import { Post } from '@/components/post';
+import { PostList } from '@/components/post-list';
 import { auth } from '@/config';
 import { useAuthUser } from '@/hooks/auth';
 import { useFeedPosts } from '@/hooks/posts';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { FlatList, Text } from 'react-native';
+import { Text } from 'react-native';
 
 const Feed: React.FC = () => {
   const user = useAuthUser();
@@ -13,9 +13,8 @@ const Feed: React.FC = () => {
   const queryClient = useQueryClient();
 
   return (
-    <FlatList
-      contentContainerStyle={{ gap: 8 }}
-      ListHeaderComponent={() =>
+    <PostList
+      Header={
         user ? (
           <Text
             onPress={() => {
@@ -29,9 +28,7 @@ const Feed: React.FC = () => {
           <Link href="/(auth)/sign-in">Sign in</Link>
         )
       }
-      data={posts}
-      renderItem={({ item }) => <Post id={item.id} data={item.data()} />}
-      keyExtractor={(item) => item.id}
+      posts={posts}
     />
   );
 };
