@@ -1,6 +1,8 @@
 Top of queue:
 - convert pages to nicer designs
-- change profile tabs so they scroll with page (probably ditch expo tabs)
+    - intention page
+    - profile tab scrolling properly
+    - profile intention tab
 - clean up optional checks in use query hooks (use throws instead)
 - immediately update feed after following someone public
 

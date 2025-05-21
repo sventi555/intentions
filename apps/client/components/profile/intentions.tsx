@@ -29,7 +29,7 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
   return (
     <FlatList
       ListHeaderComponent={() => (
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
           <Picker
             onValueChange={(val) => setOrderBy(val)}
             selectedValue={orderBy}
@@ -39,15 +39,17 @@ export const ProfileIntentions: React.FC<{ userId: string }> = ({ userId }) => {
             ))}
           </Picker>
 
-          <Text
-            onPress={() => setOrderDir(orderDir === 'asc' ? 'desc' : 'asc')}
-          >
-            {orderDir === 'asc' ? (
-              <FontAwesome name="chevron-up" />
-            ) : (
-              <FontAwesome name="chevron-down" />
-            )}
-          </Text>
+          {orderDir === 'asc' ? (
+            <FontAwesome
+              name="chevron-up"
+              onPress={() => setOrderDir('desc')}
+            />
+          ) : (
+            <FontAwesome
+              name="chevron-down"
+              onPress={() => setOrderDir('asc')}
+            />
+          )}
         </View>
       )}
       contentContainerStyle={{ padding: 8 }}
