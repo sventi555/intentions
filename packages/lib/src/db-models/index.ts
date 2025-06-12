@@ -15,6 +15,7 @@ export interface Follow {
 
 export interface Intention {
   userId: string;
+  user: Pick<User, 'username' | 'image'>;
   name: string;
   createdAt: number;
   updatedAt: number;

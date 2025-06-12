@@ -30,9 +30,19 @@ app.post(
       });
     }
 
+    const user = await collections.users().doc(requesterId).get();
+    const userData = user.data();
+    if (!userData) {
+      throw new HTTPException(500, { message: 'User data is missing' });
+    }
+
     const now = Date.now();
     await collections.intentions().add({
       userId: requesterId,
+      user: {
+        username: userData.username,
+        ...(userData.image ? { image: userData.image } : {}),
+      },
       name,
       createdAt: now,
       updatedAt: now,

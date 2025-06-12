@@ -54,12 +54,18 @@ app.patch('/', authenticate, zValidator('json', updateUserBody), async (c) => {
     ...(imageFileName ? { image: imageFileName } : {}),
   });
 
-  const updatePostData = {
+  const updatedData = {
     ...(imageFileName ? { 'user.image': imageFileName } : {}),
   };
 
   const postDocs = await userPostDocCopies(requesterId);
-  postDocs.forEach((doc) => writeBatch.update(doc, updatePostData));
+  postDocs.forEach((doc) => writeBatch.update(doc, updatedData));
+
+  const userIntentions = await collections
+    .intentions()
+    .where('userId', '==', requesterId)
+    .get();
+  userIntentions.docs.forEach((doc) => writeBatch.update(doc.ref, updatedData));
 
   await writeBatch.close();
 
