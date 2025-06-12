@@ -39,10 +39,7 @@ app.post(
     const now = Date.now();
     await collections.intentions().add({
       userId: requesterId,
-      user: {
-        username: userData.username,
-        ...(userData.image ? { image: userData.image } : {}),
-      },
+      user: { username: userData.username },
       name,
       createdAt: now,
       updatedAt: now,
