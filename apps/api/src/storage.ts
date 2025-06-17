@@ -20,18 +20,18 @@ export const uploadMedia = async (
 
   const contentType = imageMeta.match(/data:(.*);base64/)?.[1];
   if (!contentType) {
-    throw new HTTPException(400, { message: 'Mime type missing.' });
+    throw new HTTPException(400, { message: 'missing mime type' });
   }
 
   const extension = mime.extension(contentType);
   if (!extension) {
-    throw new HTTPException(400, { message: 'Invalid mime type provided.' });
+    throw new HTTPException(400, { message: 'invalid mime type' });
   }
 
   const [mimeType] = contentType.split('/');
   if (!(options.validTypes as string[]).includes(mimeType)) {
     throw new HTTPException(400, {
-      message: `Mime type must be one of [${options.validTypes.join(', ')}].`,
+      message: `mime type must be one of [${options.validTypes.join(', ')}]`,
     });
   }
 

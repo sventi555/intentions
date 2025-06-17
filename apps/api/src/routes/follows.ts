@@ -18,7 +18,7 @@ app.post('/:userId', authenticate, async (c) => {
 
   // prevent from following self
   if (followedUserId === requesterId) {
-    throw new HTTPException(400, { message: 'Cannot follow yourself.' });
+    throw new HTTPException(400, { message: 'cannot follow yourself' });
   }
 
   // check for pre-existing follow
@@ -31,14 +31,14 @@ app.post('/:userId', authenticate, async (c) => {
   // get recipient privacy
   const recipient = await collections.users().doc(followedUserId).get();
   if (!recipient.exists) {
-    throw new HTTPException(404, { message: 'User does not exist.' });
+    throw new HTTPException(404, { message: 'user does not exist' });
   }
   const isPrivate = recipient.data()?.private;
 
   // get requester info for embedding in follow
   const requester = (await collections.users().doc(requesterId).get()).data();
   if (!requester) {
-    throw new HTTPException(500, { message: 'Requester data is missing' });
+    throw new HTTPException(500);
   }
   const { username, image } = requester;
 
@@ -86,7 +86,7 @@ app.post(
     const followData = (await followDoc.get()).data();
     if (!followData) {
       throw new HTTPException(404, {
-        message: 'No follow request from this user.',
+        message: 'no follow request from user',
       });
     }
 
@@ -95,7 +95,7 @@ app.post(
       if (action === 'decline') {
         throw new HTTPException(412, {
           message:
-            "Cannot decline a request that's already accepted. Delete it instead.",
+            "cannot decline a request that's already accepted - delete it instead",
         });
       }
 

@@ -16,21 +16,16 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
   // need to get the intention and the user object to embed within the post data
   const intentionDoc = collections.intentions().doc(data.intentionId);
   const intentionData = (await intentionDoc.get()).data();
-  if (!intentionData) {
+  if (!intentionData || intentionData.userId !== requesterId) {
     throw new HTTPException(404, {
-      message: `An intention with id ${data.intentionId} does not exist.`,
-    });
-  }
-  if (intentionData.userId !== requesterId) {
-    throw new HTTPException(403, {
-      message: 'Intention is owned by another user.',
+      message: 'intention does not exist',
     });
   }
 
   const user = await collections.users().doc(requesterId).get();
   const userData = user.data();
   if (!userData) {
-    throw new HTTPException(500, { message: 'User information is missing.' });
+    throw new HTTPException(500);
   }
 
   let imageFileName: string | undefined = undefined;
@@ -77,13 +72,8 @@ app.patch(
     const updatedData = c.req.valid('json');
 
     const postData = (await collections.posts().doc(postId).get()).data();
-    if (!postData) {
-      throw new HTTPException(404, { message: 'Post does not exist.' });
-    }
-    if (postData.userId !== requesterId) {
-      throw new HTTPException(403, {
-        message: 'Post is owned by another user.',
-      });
+    if (!postData || postData.userId !== requesterId) {
+      throw new HTTPException(404, { message: 'post does not exist' });
     }
 
     const writeBatch = bulkWriter();
@@ -102,11 +92,8 @@ app.delete('/:id', authenticate, async (c) => {
   const postId = c.req.param('id');
 
   const postData = (await collections.posts().doc(postId).get()).data();
-  if (!postData) {
-    return;
-  }
-  if (postData.userId !== requesterId) {
-    throw new HTTPException(403, { message: 'Post is owned by another user.' });
+  if (!postData || postData.userId !== requesterId) {
+    return c.body(null, 204);
   }
 
   const writeBatch = bulkWriter();

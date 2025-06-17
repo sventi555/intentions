@@ -1,4 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
+import type { FirebaseAuthError, UserRecord } from 'firebase-admin/auth';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createUserBody, updateUserBody } from 'lib';
@@ -13,20 +14,30 @@ const app = new Hono();
 app.post('/', zValidator('json', createUserBody), async (c) => {
   const { username, email, isPrivate, password } = c.req.valid('json');
 
-  const existingEmail =
-    (await collections.users().where('email', '==', email).get()).size > 0;
-  if (existingEmail) {
-    throw new HTTPException(409, { message: 'Email already taken.' });
-  }
-
   const existingUsername =
     (await collections.users().where('username', '==', username).get()).size >
     0;
   if (existingUsername) {
-    throw new HTTPException(409, { message: 'Username already taken.' });
+    throw new HTTPException(409, { message: 'username already taken' });
   }
 
-  const user = await auth.createUser({ email, password });
+  let user: UserRecord;
+  try {
+    user = await auth.createUser({ email, password });
+  } catch (err) {
+    const authError = err as FirebaseAuthError;
+    switch (authError.code) {
+      case 'auth/email-already-exists':
+        throw new HTTPException(409, { message: 'email already taken' });
+      case 'auth/invalid-email':
+        throw new HTTPException(400, { message: 'invalid email' });
+      case 'auth/invalid-password':
+        throw new HTTPException(400, { message: 'invalid password' });
+      default:
+        throw new HTTPException(500);
+    }
+  }
+
   await collections
     .users()
     .doc(user.uid)

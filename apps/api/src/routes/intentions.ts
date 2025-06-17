@@ -26,14 +26,14 @@ app.post(
 
     if (existingIntention) {
       throw new HTTPException(409, {
-        message: 'User already has intention with same name.',
+        message: 'intention with same name already exists',
       });
     }
 
     const user = await collections.users().doc(requesterId).get();
     const userData = user.data();
     if (!userData) {
-      throw new HTTPException(500, { message: 'User data is missing' });
+      throw new HTTPException(500);
     }
 
     const now = Date.now();
