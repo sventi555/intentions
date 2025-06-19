@@ -9,8 +9,6 @@ export type FollowStatus = 'pending' | 'accepted';
 
 export interface Follow {
   status: FollowStatus;
-  fromUser: Pick<User, 'username' | 'image'>;
-  createdAt: number;
 }
 
 export interface Intention {
@@ -31,3 +29,17 @@ export interface Post {
   description?: string;
   image?: string;
 }
+
+export interface FollowNotification {
+  kind: 'follow';
+  data: {
+    fromUserId: string;
+    fromUser: Pick<User, 'username' | 'image'>;
+    toUserId: string;
+    toUser: Pick<User, 'username' | 'image'>;
+    status: FollowStatus;
+  };
+  createdAt: number;
+}
+
+export type Notification = FollowNotification;

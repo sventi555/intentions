@@ -6,6 +6,7 @@ import {
   respondToFollowBody,
   type Follow,
   type FollowUserResponse,
+  type Notification,
 } from 'lib';
 import { bulkWriter, collections } from '../db';
 import { authenticate } from '../middleware/auth';
@@ -30,10 +31,11 @@ app.post('/:userId', authenticate, async (c) => {
 
   // get recipient privacy
   const recipient = await collections.users().doc(followedUserId).get();
-  if (!recipient.exists) {
+  const recipientData = recipient.data();
+  if (!recipientData) {
     throw new HTTPException(404, { message: 'user does not exist' });
   }
-  const isPrivate = recipient.data()?.private;
+  const isPrivate = recipientData.private;
 
   // get requester info for embedding in follow
   const requester = (await collections.users().doc(requesterId).get()).data();
@@ -44,16 +46,38 @@ app.post('/:userId', authenticate, async (c) => {
 
   const writeBatch = bulkWriter();
 
+  const followStatus = isPrivate ? 'pending' : 'accepted';
+
   // create follow
   const followData: Follow = {
-    status: isPrivate ? 'pending' : 'accepted',
-    fromUser: {
-      username,
-      ...(image ? { image } : {}),
-    },
-    createdAt: Date.now(),
-  } as const;
+    status: followStatus,
+  };
   writeBatch.create(followDoc, followData);
+
+  // send notification so recipient can respond to follow request
+  if (isPrivate) {
+    const followNotification: Notification = {
+      kind: 'follow',
+      data: {
+        fromUserId: requesterId,
+        fromUser: {
+          username,
+          ...(image ? { image } : {}),
+        },
+        toUserId: followedUserId,
+        toUser: {
+          username: recipientData.username,
+          ...(recipientData.image ? { image: recipientData.image } : {}),
+        },
+        status: followStatus,
+      },
+      createdAt: Date.now(),
+    };
+    writeBatch.create(
+      collections.notifications(followedUserId).doc(crypto.randomUUID()),
+      followNotification,
+    );
+  }
 
   // if status is immediately accepted (recipient is public), update feed
   if (!isPrivate) {
@@ -104,8 +128,36 @@ app.post(
 
     const writeBatch = bulkWriter();
 
+    const requesterNotifications = await collections
+      .notifications(fromUserId)
+      .where('kind', '==', 'follow')
+      .where('data.toUserId', '==', requesterId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    const requesterNotification = requesterNotifications.empty
+      ? null
+      : requesterNotifications.docs[0];
+
     if (action === 'accept') {
       writeBatch.update(followDoc, { status: 'accepted' });
+      if (requesterNotification) {
+        writeBatch.update(requesterNotification.ref, {
+          'data.status': 'accepted',
+        });
+
+        const notification = requesterNotification.data();
+
+        writeBatch.create(
+          collections.notifications(fromUserId).doc(crypto.randomUUID()),
+          {
+            ...notification,
+            data: { ...notification.data, status: 'accepted' },
+            createdAt: Date.now(),
+          },
+        );
+      } else {
+        // notification data missing. Could not create "acceptance" notification
+      }
 
       const followedPosts = await collections
         .posts()
@@ -118,6 +170,9 @@ app.post(
       });
     } else {
       writeBatch.delete(followDoc);
+      if (requesterNotification) {
+        writeBatch.delete(requesterNotification.ref);
+      }
     }
 
     await writeBatch.close();

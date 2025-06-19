@@ -34,6 +34,10 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == userId;
     }
 
+    match /users/{userId}/notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /follows/{toUserId}/from/{fromUserId} {
       function isPublic() {
         return (
