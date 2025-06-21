@@ -129,9 +129,9 @@ app.post(
     const writeBatch = bulkWriter();
 
     const requesterNotifications = await collections
-      .notifications(fromUserId)
+      .notifications(requesterId)
       .where('kind', '==', 'follow')
-      .where('data.toUserId', '==', requesterId)
+      .where('data.fromUserId', '==', fromUserId)
       .orderBy('createdAt', 'desc')
       .get();
     const requesterNotification = requesterNotifications.empty
