@@ -11,8 +11,8 @@ import { storage } from './config';
 export const uploadMedia = async (
   storageDirName: string,
   mediaBase64: string,
-  size: number,
   opts?: {
+    size?: number;
     validTypes?: ('image' | 'video')[];
   },
 ) => {
@@ -45,17 +45,18 @@ export const uploadMedia = async (
   const imageId = crypto.randomUUID();
   const imageFilePath = path.join(storageDirName, `${imageId}.webp`);
 
-  let resizedImage: Buffer;
+  let finalImageBuffer: Buffer;
   try {
-    resizedImage = await sharp(Buffer.from(image, 'base64'))
-      .resize(size)
-      .webp()
-      .toBuffer();
+    let processedImage = sharp(Buffer.from(image, 'base64'));
+    if (opts?.size) {
+      processedImage = processedImage.resize(opts.size);
+    }
+    finalImageBuffer = await processedImage.webp().toBuffer();
   } catch (err) {
     throw new HTTPException(400, { message: 'image data is malformed' });
   }
 
-  await bucket.file(imageFilePath).save(resizedImage);
+  await bucket.file(imageFilePath).save(finalImageBuffer);
 
   return imageFilePath;
 };

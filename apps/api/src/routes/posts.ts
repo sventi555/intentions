@@ -30,7 +30,9 @@ app.post('/', authenticate, zValidator('json', createPostBody), async (c) => {
 
   let imageFileName: string | undefined = undefined;
   if (data.image) {
-    imageFileName = await uploadMedia(`posts/${requesterId}`, data.image, 640);
+    imageFileName = await uploadMedia(`posts/${requesterId}`, data.image, {
+      size: 640,
+    });
   }
 
   const postData: Post = {
