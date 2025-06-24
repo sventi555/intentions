@@ -11,6 +11,7 @@ import { storage } from './config';
 export const uploadMedia = async (
   storageDirName: string,
   mediaBase64: string,
+  size: number,
   opts?: {
     validTypes?: ('image' | 'video')[];
   },
@@ -47,7 +48,7 @@ export const uploadMedia = async (
   let resizedImage: Buffer;
   try {
     resizedImage = await sharp(Buffer.from(image, 'base64'))
-      .resize(640)
+      .resize(size)
       .webp()
       .toBuffer();
   } catch (err) {

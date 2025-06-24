@@ -52,7 +52,7 @@ app.patch('/', authenticate, zValidator('json', updateUserBody), async (c) => {
 
   let imageFileName: string | undefined = undefined;
   if (image) {
-    imageFileName = await uploadMedia(`dps/${requesterId}`, image, {
+    imageFileName = await uploadMedia(`dps/${requesterId}`, image, 128, {
       validTypes: ['image'],
     });
   }
