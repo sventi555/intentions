@@ -14,7 +14,8 @@
     "firebase-admin": "13.3.0",
     "hono": "4.6.11",
     "lib": "workspace:*",
-    "mime-types": "3.0.1"
+    "mime-types": "3.0.1",
+    "sharp": "0.34.2"
   },
   "devDependencies": {
     "@types/mime-types": "2.1.4",
