@@ -73,6 +73,8 @@ app.patch('/', authenticate, zValidator('json', updateUserBody), async (c) => {
   const postDocs = await userPostDocCopies(requesterId);
   postDocs.forEach((doc) => writeBatch.update(doc, updatedData));
 
+  // TODO: need to update notifications as well
+
   await writeBatch.close();
 
   return c.body(null, 200);
