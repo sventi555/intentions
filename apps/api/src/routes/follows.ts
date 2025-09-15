@@ -5,7 +5,6 @@ import {
   removeFollowBody,
   respondToFollowBody,
   type Follow,
-  type FollowUserResponse,
   type Notification,
 } from 'lib';
 import { bulkWriter, collections } from '../db';
@@ -76,7 +75,7 @@ app.post('/:userId', authenticate, async (c) => {
 
   await writeBatch.close();
 
-  return c.json<FollowUserResponse>({ status: followData.status }, 201);
+  return c.body(null, 200);
 });
 
 app.post(
