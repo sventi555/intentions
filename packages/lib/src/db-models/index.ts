@@ -1,7 +1,6 @@
 export interface User {
   email: string;
   username: string;
-  private: boolean;
   image?: string;
 }
 

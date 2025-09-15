@@ -18,16 +18,7 @@ service firebase.storage {
         );
       }
 
-      function ownerIsPublic() {
-        return (
-          firestore.exists(/databases/(default)/documents/users/$(ownerId)) &&
-          firestore.get(/databases/(default)/documents/users/$(ownerId)).data.private == false
-        );
-      }
-
-      allow read: if (
-        ownerIsPublic() || (request.auth != null && (isOwner() || followsOwner()))
-      );
+      allow read: if (request.auth != null && (isOwner() || followsOwner()));
     }
 
     match /dps/{ownerId}/{imageId} {

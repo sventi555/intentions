@@ -15,7 +15,6 @@ const USER_ID = 'USER_ID';
 
 const testUser = {
   username: 'booga',
-  private: true,
 };
 
 const userDocPath = (userId: string) => `users/${userId}`;

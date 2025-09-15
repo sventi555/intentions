@@ -21,12 +21,12 @@ setLogLevel('silent');
 
 const USER_IDS = {
   authUser: 'authUser',
-  publicUser: 'publicUser',
+  otherUser: 'otherUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: 'auth-user', private: true },
-  [USER_IDS.publicUser]: { username: 'public-user', private: false },
+  [USER_IDS.authUser]: { username: 'auth-user' },
+  [USER_IDS.otherUser]: { username: 'other-user' },
 };
 
 const feedPostDocPath = (userId: string, postId: string) =>
@@ -110,7 +110,7 @@ describe('feed rules', () => {
 
     describe('when requester is not the owner', () => {
       let postId: string = '';
-      const postUser = USER_IDS.publicUser;
+      const postUser = USER_IDS.otherUser;
 
       beforeEach(async () => {
         postId = await addFeedPostWithoutRules(testEnv, {

@@ -39,13 +39,6 @@ service cloud.firestore {
     }
 
     match /follows/{toUserId}/from/{fromUserId} {
-      function isPublic() {
-        return (
-          getIn(/users, fromUserId).data.private == false ||
-          getIn(/users, toUserId).data.private == false
-        );
-      }
-
       function includesMe() {
         return request.auth != null && (fromUserId == request.auth.uid || toUserId == request.auth.uid);
       }
@@ -58,10 +51,7 @@ service cloud.firestore {
 
       allow read: if (
         includesMe() ||
-        (
-          resource.data.status == 'accepted' &&
-          (isPublic() || belongsToFollowed())
-        )
+        (resource.data.status == 'accepted' && belongsToFollowed())
       );
     }
 
@@ -74,11 +64,7 @@ service cloud.firestore {
         return request.auth != null && isFollowing(request.auth.uid, resource.data.userId);
       }
 
-      function ownerIsPublic() {
-        return getIn(/users, resource.data.userId).data.private == false;
-      }
-
-      allow read: if (isOwner() || ownerIsPublic() || followsOwner());
+      allow read: if (isOwner() || followsOwner());
     }
 
     match /posts/{id} {
@@ -90,11 +76,7 @@ service cloud.firestore {
         return request.auth != null && isFollowing(request.auth.uid, resource.data.userId);
       }
 
-      function ownerIsPublic() {
-        return getIn(/users, resource.data.userId).data.private == false;
-      }
-
-      allow read: if (isOwner() || ownerIsPublic() || followsOwner());
+      allow read: if (isOwner() || followsOwner());
     }
   }
 }

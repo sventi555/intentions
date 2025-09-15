@@ -21,14 +21,12 @@ setLogLevel('silent');
 
 const USER_IDS = {
   authUser: 'authUser',
-  privateUser: 'privateUser',
-  publicUser: 'publicUser',
+  otherUser: 'otherUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: 'booga', private: true },
-  [USER_IDS.privateUser]: { username: 'private-user', private: true },
-  [USER_IDS.publicUser]: { username: 'public-user', private: false },
+  [USER_IDS.authUser]: { username: 'booga' },
+  [USER_IDS.otherUser]: { username: 'other-user' },
 };
 
 const STATUS = { accepted: 'accepted', pending: 'pending' };
@@ -130,38 +128,20 @@ describe('post rules', () => {
       });
     });
 
-    describe('post owner is public', () => {
-      let postId: string;
-
-      beforeEach(async () => {
-        postId = await addPostWithoutRules(testEnv, {
-          ...mockPost,
-          userId: USER_IDS.publicUser,
-        });
-      });
-
-      it('should allow reading post', async () => {
-        const db = authContext.firestore();
-
-        const postDoc = doc(db, postDocPath(postId));
-        await assertSucceeds(getDoc(postDoc));
-      });
-    });
-
     describe('requester follows post owner', () => {
       let postId: string;
 
       beforeEach(async () => {
         postId = await addPostWithoutRules(testEnv, {
           ...mockPost,
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
           const db = context.firestore();
 
           const followDoc = doc(
             db,
-            followDocPath(USER_IDS.authUser, USER_IDS.privateUser),
+            followDocPath(USER_IDS.authUser, USER_IDS.otherUser),
           );
           await setDoc(followDoc, { status: STATUS.accepted });
         });
@@ -176,13 +156,13 @@ describe('post rules', () => {
     });
 
     // NOT ALLOWED
-    describe('owner is private', () => {
+    describe('requester does not follow post user', () => {
       let postId: string;
 
       beforeEach(async () => {
         postId = await addPostWithoutRules(testEnv, {
           ...mockPost,
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
         });
       });
 
@@ -201,20 +181,20 @@ describe('post rules', () => {
       });
     });
 
-    describe("private owner follows me, but I don't follow them", () => {
+    describe("owner follows me, but I don't follow them", () => {
       let postId: string;
 
       beforeEach(async () => {
         postId = await addPostWithoutRules(testEnv, {
           ...mockPost,
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
           const db = context.firestore();
 
           const followDoc = doc(
             db,
-            followDocPath(USER_IDS.privateUser, USER_IDS.authUser),
+            followDocPath(USER_IDS.otherUser, USER_IDS.authUser),
           );
           await setDoc(followDoc, { status: STATUS.accepted });
         });

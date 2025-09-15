@@ -35,7 +35,6 @@ app.post('/:userId', authenticate, async (c) => {
   if (!recipientData) {
     throw new HTTPException(404, { message: 'user does not exist' });
   }
-  const isPrivate = recipientData.private;
 
   // get requester info for embedding in follow
   const requester = (await collections.users().doc(requesterId).get()).data();
@@ -46,51 +45,34 @@ app.post('/:userId', authenticate, async (c) => {
 
   const writeBatch = bulkWriter();
 
-  const followStatus = isPrivate ? 'pending' : 'accepted';
-
   // create follow
   const followData: Follow = {
-    status: followStatus,
+    status: 'pending',
   };
   writeBatch.create(followDoc, followData);
 
   // send notification so recipient can respond to follow request
-  if (isPrivate) {
-    const followNotification: Notification = {
-      kind: 'follow',
-      data: {
-        fromUserId: requesterId,
-        fromUser: {
-          username,
-          ...(image ? { image } : {}),
-        },
-        toUserId: followedUserId,
-        toUser: {
-          username: recipientData.username,
-          ...(recipientData.image ? { image: recipientData.image } : {}),
-        },
-        status: followStatus,
+  const followNotification: Notification = {
+    kind: 'follow',
+    data: {
+      fromUserId: requesterId,
+      fromUser: {
+        username,
+        ...(image ? { image } : {}),
       },
-      createdAt: Date.now(),
-    };
-    writeBatch.create(
-      collections.notifications(followedUserId).doc(crypto.randomUUID()),
-      followNotification,
-    );
-  }
-
-  // if status is immediately accepted (recipient is public), update feed
-  if (!isPrivate) {
-    const followedPosts = await collections
-      .posts()
-      .where('userId', '==', followedUserId)
-      .get();
-
-    followedPosts.forEach((post) => {
-      const feedPostDoc = collections.feed(requesterId).doc(post.id);
-      writeBatch.create(feedPostDoc, post.data());
-    });
-  }
+      toUserId: followedUserId,
+      toUser: {
+        username: recipientData.username,
+        ...(recipientData.image ? { image: recipientData.image } : {}),
+      },
+      status: 'pending',
+    },
+    createdAt: Date.now(),
+  };
+  writeBatch.create(
+    collections.notifications(followedUserId).doc(crypto.randomUUID()),
+    followNotification,
+  );
 
   await writeBatch.close();
 

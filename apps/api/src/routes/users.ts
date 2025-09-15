@@ -12,7 +12,7 @@ import { uploadMedia } from '../storage';
 const app = new Hono();
 
 app.post('/', zValidator('json', createUserBody), async (c) => {
-  const { username, email, isPrivate, password } = c.req.valid('json');
+  const { username, email, password } = c.req.valid('json');
 
   const existingUsername =
     (await collections.users().where('username', '==', username).get()).size >
@@ -38,10 +38,7 @@ app.post('/', zValidator('json', createUserBody), async (c) => {
     }
   }
 
-  await collections
-    .users()
-    .doc(user.uid)
-    .create({ email, username, private: isPrivate });
+  await collections.users().doc(user.uid).create({ email, username });
 
   return c.body(null, 201);
 });

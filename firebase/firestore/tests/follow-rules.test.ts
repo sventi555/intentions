@@ -14,24 +14,13 @@ setLogLevel('silent');
 
 const USER_IDS = {
   authUser: 'authUser',
-  privateUser: 'privateUser',
-  otherPrivateUser: 'otherPrivateUser',
-  publicUser: 'publicUser',
-  otherPublicUser: 'otherPublicUser',
+  otherUser: 'otherUser',
+  thirdUser: 'thirdUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: 'booga', private: true },
-  [USER_IDS.privateUser]: { username: 'private-user', private: true },
-  [USER_IDS.otherPrivateUser]: {
-    username: 'other-private-user',
-    private: true,
-  },
-  [USER_IDS.publicUser]: { username: 'public-user', private: false },
-  [USER_IDS.otherPublicUser]: {
-    username: 'other-public-user',
-    private: false,
-  },
+  [USER_IDS.authUser]: { username: 'booga' },
+  [USER_IDS.otherUser]: { username: 'other-user' },
 };
 
 const STATUS = { accepted: 'accepted', pending: 'pending' };
@@ -55,6 +44,7 @@ describe('follow rules', () => {
   let testEnv: RulesTestEnvironment;
 
   let authContext: RulesTestContext;
+  let unauthContext: RulesTestContext;
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
@@ -94,36 +84,21 @@ describe('follow rules', () => {
     describe.each([
       {
         from: USER_IDS.authUser,
-        to: USER_IDS.privateUser,
+        to: USER_IDS.otherUser,
         status: STATUS.pending,
       },
       {
         from: USER_IDS.authUser,
-        to: USER_IDS.privateUser,
+        to: USER_IDS.otherUser,
         status: STATUS.accepted,
       },
       {
-        from: USER_IDS.privateUser,
+        from: USER_IDS.otherUser,
         to: USER_IDS.authUser,
         status: STATUS.pending,
       },
       {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.authUser,
-        status: STATUS.accepted,
-      },
-      {
-        from: USER_IDS.authUser,
-        to: USER_IDS.publicUser,
-        status: STATUS.accepted,
-      },
-      {
-        from: USER_IDS.publicUser,
-        to: USER_IDS.authUser,
-        status: STATUS.pending,
-      },
-      {
-        from: USER_IDS.publicUser,
+        from: USER_IDS.otherUser,
         to: USER_IDS.authUser,
         status: STATUS.accepted,
       },
@@ -142,45 +117,13 @@ describe('follow rules', () => {
 
     describe.each([
       {
-        from: USER_IDS.publicUser,
-        to: USER_IDS.privateUser,
+        from: USER_IDS.otherUser,
+        to: USER_IDS.thirdUser,
         status: STATUS.accepted,
       },
       {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.publicUser,
-        status: STATUS.accepted,
-      },
-      {
-        from: USER_IDS.publicUser,
-        to: USER_IDS.otherPublicUser,
-        status: STATUS.accepted,
-      },
-    ])(
-      'includes someone public and is accepted: follow %o',
-      ({ from, to, status }) => {
-        beforeEach(async () => {
-          await addFollowWithoutRules(testEnv, { from, to, status });
-        });
-
-        it('should allow reading', async () => {
-          const db = authContext.firestore();
-
-          const followDoc = doc(db, followDocPath(from, to));
-          await assertSucceeds(getDoc(followDoc));
-        });
-      },
-    );
-
-    describe.each([
-      {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.otherPrivateUser,
-        status: STATUS.accepted,
-      },
-      {
-        from: USER_IDS.otherPrivateUser,
-        to: USER_IDS.privateUser,
+        from: USER_IDS.thirdUser,
+        to: USER_IDS.otherUser,
         status: STATUS.accepted,
       },
     ])(
@@ -190,7 +133,7 @@ describe('follow rules', () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
           await addFollowWithoutRules(testEnv, {
             from: USER_IDS.authUser,
-            to: USER_IDS.privateUser,
+            to: USER_IDS.otherUser,
             status: STATUS.accepted,
           });
         });
@@ -207,13 +150,13 @@ describe('follow rules', () => {
     // NOT ALLOWED
     describe.each([
       {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.otherPrivateUser,
+        from: USER_IDS.otherUser,
+        to: USER_IDS.thirdUser,
         status: STATUS.accepted,
       },
       {
-        from: USER_IDS.otherPrivateUser,
-        to: USER_IDS.privateUser,
+        from: USER_IDS.otherUser,
+        to: USER_IDS.thirdUser,
         status: STATUS.accepted,
       },
     ])(
@@ -222,7 +165,7 @@ describe('follow rules', () => {
         beforeEach(async () => {
           await addFollowWithoutRules(testEnv, { from, to, status });
           await addFollowWithoutRules(testEnv, {
-            from: USER_IDS.privateUser,
+            from: USER_IDS.otherUser,
             to: USER_IDS.authUser,
             status: STATUS.accepted,
           });
@@ -239,13 +182,13 @@ describe('follow rules', () => {
 
     describe.each([
       {
-        from: USER_IDS.publicUser,
-        to: USER_IDS.privateUser,
+        from: USER_IDS.otherUser,
+        to: USER_IDS.thirdUser,
         status: STATUS.pending,
       },
       {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.otherPrivateUser,
+        from: USER_IDS.thirdUser,
+        to: USER_IDS.otherUser,
         status: STATUS.pending,
       },
     ])(
@@ -264,10 +207,10 @@ describe('follow rules', () => {
       },
     );
 
-    describe('includes only private non-friends', () => {
+    describe('includes only non-friends', () => {
       const { from, to, status } = {
-        from: USER_IDS.privateUser,
-        to: USER_IDS.otherPrivateUser,
+        from: USER_IDS.otherUser,
+        to: USER_IDS.thirdUser,
         status: STATUS.accepted,
       };
 

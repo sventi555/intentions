@@ -21,14 +21,12 @@ setLogLevel('silent');
 
 const USER_IDS = {
   authUser: 'authUser',
-  privateUser: 'privateUser',
-  publicUser: 'publicUser',
+  otherUser: 'otherUser',
 };
 
 const testUsers = {
-  [USER_IDS.authUser]: { username: 'booga', private: true },
-  [USER_IDS.privateUser]: { username: 'private-user', private: true },
-  [USER_IDS.publicUser]: { username: 'public-user', private: false },
+  [USER_IDS.authUser]: { username: 'booga' },
+  [USER_IDS.otherUser]: { username: 'other-user' },
 };
 
 const STATUS = { accepted: 'accepted', pending: 'pending' };
@@ -113,30 +111,12 @@ describe('intention rules', () => {
       });
     });
 
-    describe('intention owner is public', () => {
-      let intentionId: string;
-
-      beforeEach(async () => {
-        intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.publicUser,
-          name: 'cook grub',
-        });
-      });
-
-      it('should allow reading intention', async () => {
-        const db = authContext.firestore();
-
-        const intentionDoc = doc(db, intentionDocPath(intentionId));
-        await assertSucceeds(getDoc(intentionDoc));
-      });
-    });
-
     describe('requester follows intention owner', () => {
       let intentionId: string;
 
       beforeEach(async () => {
         intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
           name: 'cook grub',
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
@@ -144,7 +124,7 @@ describe('intention rules', () => {
 
           const followDoc = doc(
             db,
-            followDocPath(USER_IDS.authUser, USER_IDS.privateUser),
+            followDocPath(USER_IDS.authUser, USER_IDS.otherUser),
           );
           await setDoc(followDoc, { status: STATUS.accepted });
         });
@@ -159,12 +139,12 @@ describe('intention rules', () => {
     });
 
     // NOT ALLOWED
-    describe('owner is private', () => {
+    describe('requester does not follow intention owner', () => {
       let intentionId: string;
 
       beforeEach(async () => {
         intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
           name: 'cook grub',
         });
       });
@@ -184,12 +164,12 @@ describe('intention rules', () => {
       });
     });
 
-    describe("private owner follows me, but I don't follow them", () => {
+    describe("other user follows me, but I don't follow them", () => {
       let intentionId: string;
 
       beforeEach(async () => {
         intentionId = await addIntentionWithoutRules(testEnv, {
-          userId: USER_IDS.privateUser,
+          userId: USER_IDS.otherUser,
           name: 'cook grub',
         });
         await testEnv.withSecurityRulesDisabled(async (context) => {
@@ -197,7 +177,7 @@ describe('intention rules', () => {
 
           const followDoc = doc(
             db,
-            followDocPath(USER_IDS.privateUser, USER_IDS.authUser),
+            followDocPath(USER_IDS.otherUser, USER_IDS.authUser),
           );
           await setDoc(followDoc, { status: STATUS.accepted });
         });
