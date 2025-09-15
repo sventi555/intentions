@@ -1,0 +1,15 @@
+{
+  "name": "follow-many-to-many",
+  "scripts": {
+    "test": "dotenvx run -f .env.development -- bun run index.ts",
+    "migrate": "dotenvx run -f .env.production -- bun run index.ts"
+  },
+  "packageManager": "pnpm@10.10.0",
+  "dependencies": {
+    "firebase-admin": "13.3.0"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "@types/bun": "^1.2.22"
+  }
+}
