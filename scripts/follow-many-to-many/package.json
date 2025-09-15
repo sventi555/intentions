@@ -1,8 +1,7 @@
 {
   "name": "follow-many-to-many",
   "scripts": {
-    "test": "dotenvx run -f .env.development -- bun run index.ts",
-    "migrate": "dotenvx run -f .env.production -- bun run index.ts"
+    "start": "bun run index.ts"
   },
   "packageManager": "pnpm@10.10.0",
   "dependencies": {

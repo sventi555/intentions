@@ -6,17 +6,13 @@ const app = initializeApp({
   projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
-console.log(process.env);
-
 const db = getFirestore(app);
 
-console.log((await db.collection('follows').get()).size);
-
-const follows = await db.collection('follows').get();
+const follows = await db.collection('follows').listDocuments();
 
 const writeBatch = db.bulkWriter();
 
-for (const toUser of follows.docs) {
+for (const toUser of follows) {
   const fromUsers = await db.collection(`follows/${toUser.id}/from`).get();
   for (const fromUser of fromUsers.docs) {
     const followData = fromUser.data();
